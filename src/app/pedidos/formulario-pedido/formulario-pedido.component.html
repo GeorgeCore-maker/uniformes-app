@@ -1,0 +1,129 @@
+<h2>{{ data.id ? 'Editar Pedido' : 'Nuevo Pedido' }}</h2>
+
+<form [formGroup]="formulario">
+  <mat-form-field>
+    <mat-label>Número de Pedido</mat-label>
+    <input matInput formControlName="numero" />
+    <mat-error *ngIf="formulario.get('numero')?.hasError('required')">
+      El número es requerido
+    </mat-error>
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Cliente</mat-label>
+    <mat-select formControlName="clienteId">
+      <mat-option *ngFor="let cliente of clientes" [value]="cliente.id">
+        {{ cliente.nombre }}
+      </mat-option>
+    </mat-select>
+    <mat-error *ngIf="formulario.get('clienteId')?.hasError('required')">
+      El cliente es requerido
+    </mat-error>
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Estado</mat-label>
+    <mat-select formControlName="estado">
+      <mat-option *ngFor="let estado of estados" [value]="estado">
+        {{ estado }}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <!-- Detalles del Pedido -->
+  <div class="detalles-section">
+    <h3>Detalles del Pedido</h3>
+    <table mat-table [dataSource]="detalles.controls" class="detalles-tabla">
+      <!-- Producto -->
+      <ng-container matColumnDef="productoId">
+        <th mat-header-cell *matHeaderCellDef>Producto</th>
+        <td mat-cell *matCellDef="let element; let i = index">
+          <mat-form-field>
+            <mat-select [formControl]="getProductoIdControl(i)">
+              <mat-option *ngFor="let prod of productos" [value]="prod.id">
+                {{ prod.nombre }} - {{ prod.talla }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </td>
+      </ng-container>
+
+      <!-- Cantidad -->
+      <ng-container matColumnDef="cantidad">
+        <th mat-header-cell *matHeaderCellDef>Cantidad</th>
+        <td mat-cell *matCellDef="let element; let i = index">
+          <mat-form-field>
+            <input matInput type="number" [formControl]="getCantidadControl(i)" (change)="calcularTotales()" />
+          </mat-form-field>
+        </td>
+      </ng-container>
+
+      <!-- Precio Unitario -->
+      <ng-container matColumnDef="precioUnitario">
+        <th mat-header-cell *matHeaderCellDef>Precio Unitario</th>
+        <td mat-cell *matCellDef="let element; let i = index">
+          <mat-form-field>
+            <input matInput type="number" [formControl]="getPrecioControl(i)" (change)="calcularTotales()" />
+          </mat-form-field>
+        </td>
+      </ng-container>
+
+      <!-- Subtotal -->
+      <ng-container matColumnDef="subtotal">
+        <th mat-header-cell *matHeaderCellDef>Subtotal</th>
+        <td mat-cell *matCellDef="let element; let i = index">
+          {{
+            (detalles.at(i).get('cantidad')?.value || 0) *
+              (detalles.at(i).get('precioUnitario')?.value || 0)
+            | currency : 'COP' : 'symbol' : '1.0-0'
+          }}
+        </td>
+      </ng-container>
+
+      <!-- Eliminar -->
+      <ng-container matColumnDef="eliminar">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let element; let i = index">
+          <button type="button" mat-icon-button color="warn" (click)="eliminarDetalle(i)">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+
+    <button type="button" mat-raised-button color="accent" (click)="agregarDetalle()" class="btn-agregar">
+      <mat-icon>add</mat-icon>
+      Agregar Producto
+    </button>
+  </div>
+
+  <!-- Totales -->
+  <div class="totales">
+    <mat-form-field>
+      <mat-label>Subtotal</mat-label>
+      <input matInput type="text" [value]="formulario.get('subtotal')?.value | currency : 'COP' : 'symbol' : '1.0-0'" readonly />
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Total (+ IVA 19%)</mat-label>
+      <input matInput type="text" [value]="formulario.get('total')?.value | currency : 'COP' : 'symbol' : '1.0-0'" readonly />
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Margen</mat-label>
+      <input matInput type="text" [value]="formulario.get('margen')?.value | currency : 'COP' : 'symbol' : '1.0-0'" readonly />
+    </mat-form-field>
+  </div>
+</form>
+
+<div class="botones">
+  <button mat-raised-button color="primary" (click)="guardar()" [disabled]="!formulario.valid || detalles.length === 0">
+    Guardar
+  </button>
+  <button mat-raised-button (click)="cancelar()">
+    Cancelar
+  </button>
+</div>

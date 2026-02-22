@@ -1,0 +1,91 @@
+<h2>{{ data.id ? 'Editar Producto' : 'Nuevo Producto' }}</h2>
+
+<form [formGroup]="formulario">
+  <mat-form-field>
+    <mat-label>Nombre</mat-label>
+    <input matInput formControlName="nombre" />
+    <mat-error *ngIf="formulario.get('nombre')?.hasError('required')">
+      El nombre es requerido
+    </mat-error>
+    <mat-error *ngIf="formulario.get('nombre')?.hasError('minlength')">
+      Mínimo 3 caracteres
+    </mat-error>
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Categoría</mat-label>
+    <mat-select formControlName="categoria">
+      <mat-option *ngFor="let cat of categorias" [value]="cat">
+        {{ cat }}
+      </mat-option>
+    </mat-select>
+    <mat-error *ngIf="formulario.get('categoria')?.hasError('required')">
+      La categoría es requerida
+    </mat-error>
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Talla</mat-label>
+    <input matInput formControlName="talla" />
+    <mat-error *ngIf="formulario.get('talla')?.hasError('required')">
+      La talla es requerida
+    </mat-error>
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Precio</mat-label>
+    <input matInput formControlName="precio" type="number" />
+    <mat-error *ngIf="formulario.get('precio')?.hasError('required')">
+      El precio es requerido
+    </mat-error>
+    <mat-error *ngIf="formulario.get('precio')?.hasError('min')">
+      El precio debe ser mayor a 0
+    </mat-error>
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Costo</mat-label>
+    <input matInput formControlName="costo" type="number" />
+    <mat-error *ngIf="formulario.get('costo')?.hasError('required')">
+      El costo es requerido
+    </mat-error>
+    <mat-error *ngIf="formulario.get('costo')?.hasError('min')">
+      El costo debe ser mayor a 0
+    </mat-error>
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Stock</mat-label>
+    <input matInput formControlName="stock" type="number" />
+    <mat-error *ngIf="formulario.get('stock')?.hasError('required')">
+      El stock es requerido
+    </mat-error>
+    <mat-error *ngIf="formulario.get('stock')?.hasError('min')">
+      El stock debe ser mayor o igual a 0
+    </mat-error>
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Stock Mínimo</mat-label>
+    <input matInput formControlName="stockMinimo" type="number" />
+    <mat-error *ngIf="formulario.get('stockMinimo')?.hasError('required')">
+      El stock mínimo es requerido
+    </mat-error>
+    <mat-error *ngIf="formulario.get('stockMinimo')?.hasError('min')">
+      El stock mínimo debe ser mayor o igual a 0
+    </mat-error>
+  </mat-form-field>
+
+  <mat-error *ngIf="formulario.hasError('costoMayorPrecio')">
+    El costo no puede ser mayor o igual al precio
+  </mat-error>
+</form>
+
+<div class="botones">
+  <button mat-raised-button color="primary" (click)="guardar()" [disabled]="!formulario.valid">
+    Guardar
+  </button>
+  <button mat-raised-button (click)="cancelar()">
+    Cancelar
+  </button>
+</div>

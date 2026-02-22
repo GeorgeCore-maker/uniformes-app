@@ -1,0 +1,90 @@
+<div class="clientes-container">
+  <h2>Gestión de Clientes</h2>
+
+  <!-- Filtros -->
+  <div class="filtros">
+    <mat-form-field>
+      <mat-label>Buscar por nombre</mat-label>
+      <input matInput [(ngModel)]="filtroNombre" />
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Buscar por teléfono</mat-label>
+      <input matInput [(ngModel)]="filtroTelefono" />
+    </mat-form-field>
+
+    <button mat-raised-button color="primary" (click)="buscar()">
+      <mat-icon>search</mat-icon>
+      Buscar
+    </button>
+
+    <button mat-raised-button (click)="limpiarFiltros()">
+      <mat-icon>clear</mat-icon>
+      Limpiar
+    </button>
+
+    <button mat-raised-button color="accent" (click)="abrirFormulario()">
+      <mat-icon>add</mat-icon>
+      Nuevo Cliente
+    </button>
+  </div>
+
+  <!-- Tabla -->
+  <div class="tabla-container">
+    <table mat-table [dataSource]="clientesPaginados" class="tabla-clientes">
+      <!-- Columna ID -->
+      <ng-container matColumnDef="id">
+        <th mat-header-cell *matHeaderCellDef>ID</th>
+        <td mat-cell *matCellDef="let cliente">{{ cliente.id }}</td>
+      </ng-container>
+
+      <!-- Columna Nombre -->
+      <ng-container matColumnDef="nombre">
+        <th mat-header-cell *matHeaderCellDef>Nombre</th>
+        <td mat-cell *matCellDef="let cliente">{{ cliente.nombre }}</td>
+      </ng-container>
+
+      <!-- Columna Teléfono -->
+      <ng-container matColumnDef="telefono">
+        <th mat-header-cell *matHeaderCellDef>Teléfono</th>
+        <td mat-cell *matCellDef="let cliente">{{ cliente.telefono }}</td>
+      </ng-container>
+
+      <!-- Columna Email -->
+      <ng-container matColumnDef="email">
+        <th mat-header-cell *matHeaderCellDef>Email</th>
+        <td mat-cell *matCellDef="let cliente">{{ cliente.email || 'N/A' }}</td>
+      </ng-container>
+
+      <!-- Columna Ciudad -->
+      <ng-container matColumnDef="ciudad">
+        <th mat-header-cell *matHeaderCellDef>Ciudad</th>
+        <td mat-cell *matCellDef="let cliente">{{ cliente.ciudad || 'N/A' }}</td>
+      </ng-container>
+
+      <!-- Columna Acciones -->
+      <ng-container matColumnDef="acciones">
+        <th mat-header-cell *matHeaderCellDef>Acciones</th>
+        <td mat-cell *matCellDef="let cliente">
+          <button mat-icon-button color="primary" (click)="abrirFormulario(cliente)">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" (click)="eliminar(cliente)">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+  </div>
+
+  <!-- Paginador -->
+  <mat-paginator
+    [length]="totalItems"
+    [pageSize]="pageSize"
+    [pageSizeOptions]="pageSizeOptions"
+    (page)="onPageChange($event)"
+  ></mat-paginator>
+</div>

@@ -1,0 +1,65 @@
+.produccion-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+
+  h1 {
+    margin-bottom: 20px;
+    color: #333;
+    font-size: 24px;
+  }
+
+  .filter-section {
+    margin-bottom: 20px;
+
+    mat-form-field {
+      width: 250px;
+    }
+  }
+
+  .tabla-produccion {
+    width: 100%;
+    margin-bottom: 20px;
+
+    th {
+      background-color: #f5f5f5;
+      font-weight: 600;
+    }
+
+    tr:hover {
+      background-color: #fafafa;
+    }
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px;
+    color: #999;
+
+    mat-icon {
+      font-size: 64px;
+      width: 64px;
+      height: 64px;
+      margin-bottom: 20px;
+      opacity: 0.5;
+    }
+
+    p {
+      font-size: 16px;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .produccion-container {
+    padding: 15px;
+
+    .filter-section mat-form-field {
+      width: 100%;
+    }
+
+    .tabla-produccion {
+      font-size: 12px;
+    }
+  }
+}

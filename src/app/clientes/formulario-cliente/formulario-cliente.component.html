@@ -1,0 +1,57 @@
+<h2>{{ data.id ? 'Editar Cliente' : 'Nuevo Cliente' }}</h2>
+
+<form [formGroup]="formulario">
+  <mat-form-field>
+    <mat-label>Nombre</mat-label>
+    <input matInput formControlName="nombre" />
+    <mat-error *ngIf="formulario.get('nombre')?.hasError('required')">
+      El nombre es requerido
+    </mat-error>
+    <mat-error *ngIf="formulario.get('nombre')?.hasError('minlength')">
+      Mínimo 3 caracteres
+    </mat-error>
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Teléfono</mat-label>
+    <input matInput formControlName="telefono" />
+    <mat-error *ngIf="formulario.get('telefono')?.hasError('required')">
+      El teléfono es requerido
+    </mat-error>
+    <mat-error *ngIf="formulario.get('telefono')?.hasError('pattern')">
+      Debe ser un número de 10 dígitos
+    </mat-error>
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Email</mat-label>
+    <input matInput formControlName="email" />
+    <mat-error *ngIf="formulario.get('email')?.hasError('email')">
+      Email inválido
+    </mat-error>
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Dirección</mat-label>
+    <input matInput formControlName="direccion" />
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Ciudad</mat-label>
+    <input matInput formControlName="ciudad" />
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>NIT</mat-label>
+    <input matInput formControlName="nit" />
+  </mat-form-field>
+</form>
+
+<div class="botones">
+  <button mat-raised-button color="primary" (click)="guardar()" [disabled]="!formulario.valid">
+    Guardar
+  </button>
+  <button mat-raised-button (click)="cancelar()">
+    Cancelar
+  </button>
+</div>

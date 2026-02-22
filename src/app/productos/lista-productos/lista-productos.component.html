@@ -1,0 +1,116 @@
+<div class="productos-container">
+  <h2>Gestión de Productos</h2>
+
+  <!-- Filtros -->
+  <div class="filtros">
+    <mat-form-field>
+      <mat-label>Buscar por nombre</mat-label>
+      <input matInput [(ngModel)]="filtroNombre" />
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Categoría</mat-label>
+      <mat-select [(ngModel)]="filtroCategoria">
+        <mat-option value="">Todas</mat-option>
+        <mat-option *ngFor="let cat of categorias" [value]="cat">
+          {{ cat }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <button mat-raised-button color="primary" (click)="buscar()">
+      <mat-icon>search</mat-icon>
+      Buscar
+    </button>
+
+    <button mat-raised-button (click)="limpiarFiltros()">
+      <mat-icon>clear</mat-icon>
+      Limpiar
+    </button>
+
+    <button mat-raised-button color="accent" (click)="abrirFormulario()">
+      <mat-icon>add</mat-icon>
+      Nuevo Producto
+    </button>
+  </div>
+
+  <!-- Tabla -->
+  <div class="tabla-container">
+    <table mat-table [dataSource]="productosPaginados" class="tabla-productos">
+      <!-- Columna ID -->
+      <ng-container matColumnDef="id">
+        <th mat-header-cell *matHeaderCellDef>ID</th>
+        <td mat-cell *matCellDef="let producto">{{ producto.id }}</td>
+      </ng-container>
+
+      <!-- Columna Nombre -->
+      <ng-container matColumnDef="nombre">
+        <th mat-header-cell *matHeaderCellDef>Nombre</th>
+        <td mat-cell *matCellDef="let producto">{{ producto.nombre }}</td>
+      </ng-container>
+
+      <!-- Columna Categoría -->
+      <ng-container matColumnDef="categoria">
+        <th mat-header-cell *matHeaderCellDef>Categoría</th>
+        <td mat-cell *matCellDef="let producto">{{ producto.categoria }}</td>
+      </ng-container>
+
+      <!-- Columna Talla -->
+      <ng-container matColumnDef="talla">
+        <th mat-header-cell *matHeaderCellDef>Talla</th>
+        <td mat-cell *matCellDef="let producto">{{ producto.talla }}</td>
+      </ng-container>
+
+      <!-- Columna Precio -->
+      <ng-container matColumnDef="precio">
+        <th mat-header-cell *matHeaderCellDef>Precio</th>
+        <td mat-cell *matCellDef="let producto">
+          {{ producto.precio | currency : 'COP' : 'symbol' : '1.0-0' }}
+        </td>
+      </ng-container>
+
+      <!-- Columna Costo -->
+      <ng-container matColumnDef="costo">
+        <th mat-header-cell *matHeaderCellDef>Costo</th>
+        <td mat-cell *matCellDef="let producto">
+          {{ producto.costo | currency : 'COP' : 'symbol' : '1.0-0' }}
+        </td>
+      </ng-container>
+
+      <!-- Columna Stock -->
+      <ng-container matColumnDef="stock">
+        <th mat-header-cell *matHeaderCellDef>Stock</th>
+        <td mat-cell *matCellDef="let producto">
+          <span [ngClass]="{ 'stock-bajo': isStockBajo(producto) }">
+            {{ producto.stock }}
+            <mat-icon *ngIf="isStockBajo(producto)" matBadge="!" matBadgeColor="warn">warning</mat-icon>
+          </span>
+        </td>
+      </ng-container>
+
+      <!-- Columna Acciones -->
+      <ng-container matColumnDef="acciones">
+        <th mat-header-cell *matHeaderCellDef>Acciones</th>
+        <td mat-cell *matCellDef="let producto">
+          <button mat-icon-button color="primary" (click)="abrirFormulario(producto)">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" (click)="eliminar(producto)">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+  </div>
+
+  <!-- Paginador -->
+  <mat-paginator
+    [length]="totalItems"
+    [pageSize]="pageSize"
+    [pageSizeOptions]="pageSizeOptions"
+    (page)="onPageChange($event)"
+  ></mat-paginator>
+</div>

@@ -1,0 +1,57 @@
+<div class="dashboard-container">
+  <h1>Bienvenido al Sistema de Uniformes</h1>
+
+  <div class="stats-grid">
+    <mat-card class="stat-card">
+      <mat-card-header>
+        <mat-icon class="stat-icon">people</mat-icon>
+      </mat-card-header>
+      <mat-card-content>
+        <h3>Clientes</h3>
+        <p class="stat-value">{{ totalClientes }}</p>
+        <button mat-stroked-button color="primary" routerLink="/clientes">
+          Ver Clientes
+        </button>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card">
+      <mat-card-header>
+        <mat-icon class="stat-icon">inventory</mat-icon>
+      </mat-card-header>
+      <mat-card-content>
+        <h3>Productos</h3>
+        <p class="stat-value">{{ totalProductos }}</p>
+        <button mat-stroked-button color="primary" routerLink="/productos">
+          Ver Productos
+        </button>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card">
+      <mat-card-header>
+        <mat-icon class="stat-icon">shopping_cart</mat-icon>
+      </mat-card-header>
+      <mat-card-content>
+        <h3>Pedidos Total</h3>
+        <p class="stat-value">{{ totalPedidos }}</p>
+        <button mat-stroked-button color="primary" routerLink="/pedidos">
+          Ver Pedidos
+        </button>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card highlight">
+      <mat-card-header>
+        <mat-icon class="stat-icon">pending_actions</mat-icon>
+      </mat-card-header>
+      <mat-card-content>
+        <h3>Pedidos Pendientes</h3>
+        <p class="stat-value">{{ pedidosPendientes }}</p>
+        <button mat-stroked-button color="warn" routerLink="/pedidos">
+          Atender
+        </button>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

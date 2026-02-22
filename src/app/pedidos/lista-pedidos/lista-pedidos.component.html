@@ -1,0 +1,174 @@
+<div class="pedidos-container">
+  <h2>Gestión de Pedidos</h2>
+
+  <!-- Filtros de Rango de Fechas -->
+  <div class="filtros-fechas">
+    <h3>Filtrar por Rango de Fechas</h3>
+    <form [formGroup]="formularioFechas" class="fecha-form">
+      <mat-form-field appearance="outline">
+        <mat-label>Fecha Inicio</mat-label>
+        <input matInput [matDatepicker]="pickerInicio" formControlName="fechaInicio" />
+        <mat-datepicker-toggle matSuffix [for]="pickerInicio"></mat-datepicker-toggle>
+        <mat-datepicker #pickerInicio></mat-datepicker>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Fecha Fin</mat-label>
+        <input matInput [matDatepicker]="pickerFin" formControlName="fechaFin" />
+        <mat-datepicker-toggle matSuffix [for]="pickerFin"></mat-datepicker-toggle>
+        <mat-datepicker #pickerFin></mat-datepicker>
+      </mat-form-field>
+
+      <button mat-raised-button color="primary" (click)="actualizarRangoFechas()">
+        <mat-icon>date_range</mat-icon>
+        Aplicar Fechas
+      </button>
+
+      <button mat-raised-button (click)="establecerUltimos7Dias()">
+        <mat-icon>access_time</mat-icon>
+        Últimos 7 días
+      </button>
+
+      <button mat-raised-button (click)="establecerUltimos30Dias()">
+        <mat-icon>calendar_today</mat-icon>
+        Últimos 30 días
+      </button>
+
+      <button mat-raised-button (click)="establecerMesActual()">
+        <mat-icon>calendar_month</mat-icon>
+        Mes Actual
+      </button>
+
+      <button mat-raised-button (click)="establecerAnoActual()">
+        <mat-icon>event_note</mat-icon>
+        Año Actual
+      </button>
+    </form>
+  </div>
+
+  <!-- Filtros Principales -->
+  <div class="filtros">
+    <mat-form-field>
+      <mat-label>Buscar por número</mat-label>
+      <input matInput [(ngModel)]="filtroNumero" />
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Estado</mat-label>
+      <mat-select [(ngModel)]="filtroEstado">
+        <mat-option value="">Todos</mat-option>
+        <mat-option *ngFor="let est of estados" [value]="est">
+          {{ est }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <button mat-raised-button color="primary" (click)="buscar()">
+      <mat-icon>search</mat-icon>
+      Buscar
+    </button>
+
+    <button mat-raised-button (click)="limpiarFiltros()">
+      <mat-icon>clear</mat-icon>
+      Limpiar
+    </button>
+
+    <button mat-raised-button color="accent" (click)="abrirFormulario()">
+      <mat-icon>add</mat-icon>
+      Nuevo Pedido
+    </button>
+  </div>
+
+  <!-- Botones de Exportación -->
+  <div class="exportar-section">
+    <h3>Exportar Datos</h3>
+    <button mat-raised-button color="warn" (click)="exportarSeleccionadosAExcel()">
+      <mat-icon>cloud_download</mat-icon>
+      Exportar Filtrados a Excel
+    </button>
+
+    <button mat-raised-button color="warn" (click)="exportarTodosAExcel()">
+      <mat-icon>cloud_download</mat-icon>
+      Exportar Todos a Excel
+    </button>
+  </div>
+
+  <!-- Tabla -->
+  <div class="tabla-container">
+    <table mat-table [dataSource]="pedidosPaginados" class="tabla-pedidos">
+      <!-- Columna ID -->
+      <ng-container matColumnDef="id">
+        <th mat-header-cell *matHeaderCellDef>ID</th>
+        <td mat-cell *matCellDef="let pedido">{{ pedido.id }}</td>
+      </ng-container>
+
+      <!-- Columna Número -->
+      <ng-container matColumnDef="numero">
+        <th mat-header-cell *matHeaderCellDef>Número</th>
+        <td mat-cell *matCellDef="let pedido">{{ pedido.numero }}</td>
+      </ng-container>
+
+      <!-- Columna Cliente -->
+      <ng-container matColumnDef="clienteId">
+        <th mat-header-cell *matHeaderCellDef>Cliente ID</th>
+        <td mat-cell *matCellDef="let pedido">{{ pedido.clienteId }}</td>
+      </ng-container>
+
+      <!-- Columna Estado -->
+      <ng-container matColumnDef="estado">
+        <th mat-header-cell *matHeaderCellDef>Estado</th>
+        <td mat-cell *matCellDef="let pedido">
+          <mat-chip [color]="getColorEstado(pedido.estado)" selected>
+            {{ pedido.estado }}
+          </mat-chip>
+        </td>
+      </ng-container>
+
+      <!-- Columna Subtotal -->
+      <ng-container matColumnDef="subtotal">
+        <th mat-header-cell *matHeaderCellDef>Subtotal</th>
+        <td mat-cell *matCellDef="let pedido">
+          {{ pedido.subtotal | currency : 'COP' : 'symbol' : '1.0-0' }}
+        </td>
+      </ng-container>
+
+      <!-- Columna Total -->
+      <ng-container matColumnDef="total">
+        <th mat-header-cell *matHeaderCellDef>Total</th>
+        <td mat-cell *matCellDef="let pedido">
+          {{ pedido.total | currency : 'COP' : 'symbol' : '1.0-0' }}
+        </td>
+      </ng-container>
+
+      <!-- Columna Acciones -->
+      <ng-container matColumnDef="acciones">
+        <th mat-header-cell *matHeaderCellDef>Acciones</th>
+        <td mat-cell *matCellDef="let pedido">
+          <button mat-icon-button color="primary" (click)="exportarPedidoAPdf(pedido)" matTooltip="Exportar a PDF">
+            <mat-icon>picture_as_pdf</mat-icon>
+          </button>
+          <button mat-icon-button color="primary" (click)="cambiarEstado(pedido)" matTooltip="Cambiar estado">
+            <mat-icon>arrow_forward</mat-icon>
+          </button>
+          <button mat-icon-button color="primary" (click)="abrirFormulario(pedido)" matTooltip="Editar">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" (click)="eliminar(pedido)" matTooltip="Eliminar">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+  </div>
+
+  <!-- Paginador -->
+  <mat-paginator
+    [length]="totalItems"
+    [pageSize]="pageSize"
+    [pageSizeOptions]="pageSizeOptions"
+    (page)="onPageChange($event)"
+  ></mat-paginator>
+</div>

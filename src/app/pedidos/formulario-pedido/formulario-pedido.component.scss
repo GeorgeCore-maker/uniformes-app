@@ -1,0 +1,49 @@
+mat-form-field {
+  display: block;
+  width: 100%;
+  margin-bottom: 15px;
+}
+
+.detalles-section {
+  margin: 20px 0;
+
+  h3 {
+    margin-bottom: 15px;
+  }
+
+  .detalles-tabla {
+    width: 100%;
+    margin-bottom: 10px;
+
+    mat-form-field {
+      margin-bottom: 0;
+      width: 100%;
+    }
+
+    td {
+      padding: 8px;
+    }
+  }
+
+  .btn-agregar {
+    margin-bottom: 20px;
+  }
+}
+
+.totales {
+  display: flex;
+  gap: 15px;
+  margin: 20px 0;
+
+  mat-form-field {
+    flex: 1;
+    margin-bottom: 0;
+  }
+}
+
+.botones {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 20px;
+}

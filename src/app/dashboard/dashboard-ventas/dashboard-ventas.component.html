@@ -1,0 +1,147 @@
+<div class="dashboard-ventas-container">
+  <h2>Dashboard de Ventas</h2>
+
+  <!-- Selección de Rango de Fechas -->
+  <div class="filtros-fechas">
+    <h3>Período de Análisis</h3>
+    <form [formGroup]="formularioFechas" class="fecha-form">
+      <mat-form-field appearance="outline">
+        <mat-label>Fecha Inicio</mat-label>
+        <input matInput [matDatepicker]="pickerInicio" formControlName="fechaInicio" />
+        <mat-datepicker-toggle matSuffix [for]="pickerInicio"></mat-datepicker-toggle>
+        <mat-datepicker #pickerInicio></mat-datepicker>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Fecha Fin</mat-label>
+        <input matInput [matDatepicker]="pickerFin" formControlName="fechaFin" />
+        <mat-datepicker-toggle matSuffix [for]="pickerFin"></mat-datepicker-toggle>
+        <mat-datepicker #pickerFin></mat-datepicker>
+      </mat-form-field>
+
+      <button mat-raised-button color="primary" (click)="actualizarRangoFechas()">
+        <mat-icon>date_range</mat-icon>
+        Aplicar
+      </button>
+
+      <button mat-raised-button (click)="establecerUltimos7Dias()">
+        7 días
+      </button>
+
+      <button mat-raised-button (click)="establecerUltimos30Dias()">
+        30 días
+      </button>
+
+      <button mat-raised-button (click)="establecerMesActual()">
+        Mes
+      </button>
+
+      <button mat-raised-button (click)="establecerAnoActual()">
+        Año
+      </button>
+    </form>
+  </div>
+
+  <!-- Indicadores Principales -->
+  <div class="indicadores" *ngIf="estadisticas">
+    <mat-card class="indicador">
+      <mat-card-content>
+        <div class="indicador-titulo">Total de Pedidos</div>
+        <div class="indicador-valor">{{ estadisticas.totalPedidos }}</div>
+        <div class="indicador-icono">
+          <mat-icon>shopping_cart</mat-icon>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="indicador">
+      <mat-card-content>
+        <div class="indicador-titulo">Total de Ventas</div>
+        <div class="indicador-valor">{{ formatearMoneda(estadisticas.totalVentas) }}</div>
+        <div class="indicador-icono">
+          <mat-icon>attach_money</mat-icon>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="indicador">
+      <mat-card-content>
+        <div class="indicador-titulo">Venta Promedio</div>
+        <div class="indicador-valor">{{ formatearMoneda(estadisticas.promedioVenta) }}</div>
+        <div class="indicador-icono">
+          <mat-icon>trending_up</mat-icon>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="indicador">
+      <mat-card-content>
+        <div class="indicador-titulo">Venta Mínima</div>
+        <div class="indicador-valor">{{ formatearMoneda(estadisticas.ventaMinima) }}</div>
+        <div class="indicador-icono">
+          <mat-icon>trending_down</mat-icon>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="indicador">
+      <mat-card-content>
+        <div class="indicador-titulo">Venta Máxima</div>
+        <div class="indicador-valor">{{ formatearMoneda(estadisticas.ventaMaxima) }}</div>
+        <div class="indicador-icono">
+          <mat-icon>trending_up</mat-icon>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Estados de Pedidos -->
+  <div class="estados-section" *ngIf="estadisticas">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Distribución por Estado</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="estados-grid">
+          <div class="estado-item" *ngFor="let estado of ['PENDIENTE', 'EN_CONFECCION', 'TERMINADO', 'ENVIADO', 'ENTREGADO', 'CANCELADO']">
+            <div class="estado-nombre">{{ estado }}</div>
+            <div class="estado-cantidad">{{ estadisticas.estadosPedidos[estado] || 0 }}</div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Ventas por Día -->
+  <div class="ventas-dia-section" *ngIf="obtenerDiasConVentas().length > 0">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Ventas por Día</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="dia-item" *ngFor="let dia of obtenerDiasConVentas()">
+          <div class="dia-fecha">{{ dia }}</div>
+          <div class="dia-venta">{{ formatearMoneda(ventasPorDia[dia]) }}</div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Top 5 Clientes -->
+  <div class="top-clientes-section" *ngIf="obtenerTop5Clientes().length > 0">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Top 5 Clientes</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="cliente-item" *ngFor="let cliente of obtenerTop5Clientes()">
+          <div class="cliente-info">
+            <div class="cliente-id">Cliente ID: {{ cliente.clienteId }}</div>
+            <div class="cliente-cantidad">{{ cliente.cantidad }} pedidos</div>
+          </div>
+          <div class="cliente-ventas">{{ formatearMoneda(cliente.totalVentas) }}</div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

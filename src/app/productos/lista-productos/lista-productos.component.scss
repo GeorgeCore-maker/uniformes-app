@@ -1,0 +1,54 @@
+.productos-container {
+  padding: 20px;
+
+  h2 {
+    margin-bottom: 20px;
+    color: #333;
+  }
+
+  .filtros {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    align-items: center;
+
+    mat-form-field {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    button {
+      height: 56px;
+    }
+  }
+
+  .tabla-container {
+    overflow-x: auto;
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+
+    .tabla-productos {
+      width: 100%;
+
+      th {
+        background-color: #f5f5f5;
+        font-weight: 600;
+      }
+
+      td {
+        padding: 16px;
+      }
+
+      tr:hover {
+        background-color: #f9f9f9;
+      }
+
+      .stock-bajo {
+        color: #f44336;
+        font-weight: 600;
+      }
+    }
+  }
+}

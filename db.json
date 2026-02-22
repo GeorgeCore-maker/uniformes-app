@@ -1,0 +1,222 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "admin",
+      "password": "admin123",
+      "role": "ADMIN",
+      "token": "fake-jwt-token-admin"
+    },
+    {
+      "id": 2,
+      "username": "vendedor",
+      "password": "vendedor123",
+      "role": "VENDEDOR",
+      "token": "fake-jwt-token-vendedor"
+    },
+    {
+      "id": 3,
+      "username": "operario",
+      "password": "operario123",
+      "role": "OPERARIO",
+      "token": "fake-jwt-token-operario"
+    }
+  ],
+  "clientes": [
+    {
+      "id": 1,
+      "nombre": "Colegio Santa María",
+      "telefono": "3001234567",
+      "email": "contacto@santamaria.edu.co",
+      "direccion": "Calle 10 #20-30",
+      "ciudad": "Bogotá",
+      "nit": "900123456"
+    },
+    {
+      "id": 2,
+      "nombre": "Hospital Central",
+      "telefono": "3007654321",
+      "email": "compras@hospitalcentral.com",
+      "direccion": "Carrera 5 #15-45",
+      "ciudad": "Medellín",
+      "nit": "901234567"
+    },
+    {
+      "id": 3,
+      "nombre": "Empresa de Servicios ABC",
+      "telefono": "3009876543",
+      "email": "admin@serviciosABC.com",
+      "direccion": "Avenida 68 #50-22",
+      "ciudad": "Cali",
+      "nit": "902345678"
+    }
+  ],
+  "productos": [
+    {
+      "id": 1,
+      "nombre": "Uniforme Escolar - Vestido",
+      "descripcion": "Uniforme escolar para niñas",
+      "categoria": "UNIFORMES_ESCOLARES",
+      "talla": "S",
+      "precio": 85000,
+      "costo": 45000,
+      "stock": 50,
+      "stockMinimo": 10
+    },
+    {
+      "id": 2,
+      "nombre": "Uniforme Escolar - Pantalón",
+      "descripcion": "Uniforme escolar para niños",
+      "categoria": "UNIFORMES_ESCOLARES",
+      "talla": "M",
+      "precio": 65000,
+      "costo": 35000,
+      "stock": 30,
+      "stockMinimo": 10
+    },
+    {
+      "id": 3,
+      "nombre": "Bata Médica Blanca",
+      "descripcion": "Bata médica de algodón",
+      "categoria": "TRAJES_MEDICOS",
+      "talla": "L",
+      "precio": 120000,
+      "costo": 60000,
+      "stock": 5,
+      "stockMinimo": 15
+    },
+    {
+      "id": 4,
+      "nombre": "Pantalón Quirúrgico Verde",
+      "descripcion": "Pantalón para procedimientos médicos",
+      "categoria": "TRAJES_MEDICOS",
+      "talla": "M",
+      "precio": 95000,
+      "costo": 50000,
+      "stock": 8,
+      "stockMinimo": 10
+    },
+    {
+      "id": 5,
+      "nombre": "Uniforme Servicios - Polo",
+      "descripcion": "Polo para personal de servicios",
+      "categoria": "DOTACION_SERVICIOS",
+      "talla": "XL",
+      "precio": 55000,
+      "costo": 28000,
+      "stock": 100,
+      "stockMinimo": 20
+    },
+    {
+      "id": 6,
+      "nombre": "Uniforme Servicios - Pantalón",
+      "descripcion": "Pantalón para personal de servicios",
+      "categoria": "DOTACION_SERVICIOS",
+      "talla": "L",
+      "precio": 65000,
+      "costo": 35000,
+      "stock": 2,
+      "stockMinimo": 15
+    }
+  ],
+  "pedidos": [
+    {
+      "id": 1,
+      "clienteId": 1,
+      "numero": "PED-001",
+      "estado": "PENDIENTE",
+      "detalles": [
+        {
+          "id": 1,
+          "productoId": 1,
+          "cantidad": 100,
+          "precioUnitario": 85000,
+          "subtotal": 8500000
+        }
+      ],
+      "subtotal": 8500000,
+      "impuesto": 1700000,
+      "total": 10200000,
+      "margen": 4000000,
+      "fechaCreacion": "2026-02-15",
+      "observaciones": "Entrega para inicio de año escolar"
+    },
+    {
+      "id": 2,
+      "clienteId": 2,
+      "numero": "PED-002",
+      "estado": "EN_CONFECCION",
+      "detalles": [
+        {
+          "id": 2,
+          "productoId": 3,
+          "cantidad": 20,
+          "precioUnitario": 120000,
+          "subtotal": 2400000
+        },
+        {
+          "id": 3,
+          "productoId": 4,
+          "cantidad": 20,
+          "precioUnitario": 95000,
+          "subtotal": 1900000
+        }
+      ],
+      "subtotal": 4300000,
+      "impuesto": 860000,
+      "total": 5160000,
+      "margen": 2150000,
+      "fechaCreacion": "2026-02-18",
+      "observaciones": "Equipamiento para nuevo personal"
+    }
+  ],
+  "roles": [
+    {
+      "id": 1,
+      "nombre": "ADMIN",
+      "descripcion": "Administrador con acceso total a todos los módulos",
+      "permisos": ["ver_dashboard", "crear_pedido", "editar_pedido", "eliminar_pedido", "ver_inventario", "editar_inventario", "ver_produccion", "editar_produccion", "ver_clientes", "crear_cliente", "editar_cliente", "eliminar_cliente", "ver_usuarios", "crear_usuario", "editar_usuario", "eliminar_usuario", "ver_roles", "crear_rol", "editar_rol", "eliminar_rol"],
+      "activo": true,
+      "createdAt": "2026-01-01T10:00:00Z",
+      "updatedAt": "2026-01-01T10:00:00Z"
+    },
+    {
+      "id": 2,
+      "nombre": "VENDEDOR",
+      "descripcion": "Vendedor con acceso a clientes y pedidos",
+      "permisos": ["ver_dashboard", "crear_pedido", "editar_pedido", "ver_clientes", "crear_cliente", "editar_cliente"],
+      "activo": true,
+      "createdAt": "2026-01-01T10:00:00Z",
+      "updatedAt": "2026-01-01T10:00:00Z"
+    },
+    {
+      "id": 3,
+      "nombre": "OPERARIO",
+      "descripcion": "Operario con acceso a producción e inventario",
+      "permisos": ["ver_dashboard", "ver_produccion", "editar_produccion", "ver_inventario", "editar_inventario"],
+      "activo": true,
+      "createdAt": "2026-01-01T10:00:00Z",
+      "updatedAt": "2026-01-01T10:00:00Z"
+    },
+    {
+      "id": 4,
+      "nombre": "GERENTE",
+      "descripcion": "Gerente con acceso completo excepto gestión de usuarios",
+      "permisos": ["ver_dashboard", "crear_pedido", "editar_pedido", "eliminar_pedido", "ver_inventario", "editar_inventario", "ver_produccion", "editar_produccion", "ver_clientes", "crear_cliente", "editar_cliente", "eliminar_cliente"],
+      "activo": true,
+      "createdAt": "2026-01-01T10:00:00Z",
+      "updatedAt": "2026-01-01T10:00:00Z"
+    },
+    {
+      "id": 5,
+      "nombre": "SUPERVISOR",
+      "descripcion": "Supervisor con acceso a reportes y validación",
+      "permisos": ["ver_dashboard", "ver_pedido", "ver_inventario", "ver_produccion", "ver_clientes"],
+      "activo": true,
+      "createdAt": "2026-01-01T10:00:00Z",
+      "updatedAt": "2026-01-01T10:00:00Z"
+    }
+  ]
+}
+
+
