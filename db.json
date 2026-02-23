@@ -5,21 +5,30 @@
       "username": "admin",
       "password": "admin123",
       "role": "ADMIN",
-      "token": "fake-jwt-token-admin"
+      "token": "fake-jwt-token-admin",
+      "activo": true,
+      "habilitado": true,
+      "fechaDeshabilitado": null
     },
     {
       "id": 2,
       "username": "vendedor",
       "password": "vendedor123",
       "role": "VENDEDOR",
-      "token": "fake-jwt-token-vendedor"
+      "token": "fake-jwt-token-vendedor",
+      "activo": true,
+      "habilitado": true,
+      "fechaDeshabilitado": null
     },
     {
       "id": 3,
       "username": "operario",
       "password": "operario123",
       "role": "OPERARIO",
-      "token": "fake-jwt-token-operario"
+      "token": "fake-jwt-token-operario",
+      "activo": true,
+      "habilitado": true,
+      "fechaDeshabilitado": null
     }
   ],
   "clientes": [
@@ -30,7 +39,9 @@
       "email": "contacto@santamaria.edu.co",
       "direccion": "Calle 10 #20-30",
       "ciudad": "Bogotá",
-      "nit": "900123456"
+      "nit": "900123456",
+      "habilitado": true,
+      "fechaDeshabilitado": null
     },
     {
       "id": 2,
@@ -39,7 +50,10 @@
       "email": "compras@hospitalcentral.com",
       "direccion": "Carrera 5 #15-45",
       "ciudad": "Medellín",
-      "nit": "901234567"
+      "nit": "901234567",
+      "habilitado": false,
+      "fechaDeshabilitado": "2026-02-22T18:07:25.760Z",
+      "updatedAt": "2026-02-22T18:07:25.764Z"
     },
     {
       "id": 3,
@@ -48,7 +62,50 @@
       "email": "admin@serviciosABC.com",
       "direccion": "Avenida 68 #50-22",
       "ciudad": "Cali",
-      "nit": "902345678"
+      "nit": "902345678",
+      "habilitado": true,
+      "fechaDeshabilitado": null
+    },
+    {
+      "nombre": "Jorge Diaz",
+      "telefono": "3123456789",
+      "email": "mnb@gmail.com",
+      "direccion": "calle",
+      "ciudad": "san gil",
+      "nit": "123456",
+      "habilitado": true,
+      "createdAt": "2026-02-22T23:56:48.837Z",
+      "updatedAt": "2026-02-22T23:56:48.837Z",
+      "id": 4
+    }
+  ],
+  "categorias": [
+    {
+      "id": 1,
+      "nombre": "UNIFORMES_ESCOLARES",
+      "descripcion": "Uniformes para instituciones educativas",
+      "habilitado": true,
+      "fechaDeshabilitado": null,
+      "createdAt": "2026-01-01T10:00:00Z",
+      "updatedAt": "2026-01-01T10:00:00Z"
+    },
+    {
+      "id": 2,
+      "nombre": "TRAJES_MEDICOS",
+      "descripcion": "Prendas para personal médico y de salud",
+      "habilitado": true,
+      "fechaDeshabilitado": null,
+      "createdAt": "2026-01-01T10:00:00Z",
+      "updatedAt": "2026-01-01T10:00:00Z"
+    },
+    {
+      "id": 3,
+      "nombre": "DOTACION_SERVICIOS",
+      "descripcion": "Uniformes para personal de servicios e instalaciones",
+      "habilitado": true,
+      "fechaDeshabilitado": null,
+      "createdAt": "2026-01-01T10:00:00Z",
+      "updatedAt": "2026-01-01T10:00:00Z"
     }
   ],
   "productos": [
@@ -61,7 +118,10 @@
       "precio": 85000,
       "costo": 45000,
       "stock": 50,
-      "stockMinimo": 10
+      "stockMinimo": 10,
+      "requiereConfeccion": true,
+      "habilitado": true,
+      "fechaDeshabilitado": null
     },
     {
       "id": 2,
@@ -72,7 +132,10 @@
       "precio": 65000,
       "costo": 35000,
       "stock": 30,
-      "stockMinimo": 10
+      "stockMinimo": 10,
+      "requiereConfeccion": true,
+      "habilitado": true,
+      "fechaDeshabilitado": null
     },
     {
       "id": 3,
@@ -83,7 +146,10 @@
       "precio": 120000,
       "costo": 60000,
       "stock": 5,
-      "stockMinimo": 15
+      "stockMinimo": 15,
+      "requiereConfeccion": false,
+      "habilitado": true,
+      "fechaDeshabilitado": null
     },
     {
       "id": 4,
@@ -94,7 +160,10 @@
       "precio": 95000,
       "costo": 50000,
       "stock": 8,
-      "stockMinimo": 10
+      "stockMinimo": 10,
+      "requiereConfeccion": false,
+      "habilitado": true,
+      "fechaDeshabilitado": null
     },
     {
       "id": 5,
@@ -105,7 +174,10 @@
       "precio": 55000,
       "costo": 28000,
       "stock": 100,
-      "stockMinimo": 20
+      "stockMinimo": 20,
+      "requiereConfeccion": true,
+      "habilitado": true,
+      "fechaDeshabilitado": null
     },
     {
       "id": 6,
@@ -116,7 +188,10 @@
       "precio": 65000,
       "costo": 35000,
       "stock": 2,
-      "stockMinimo": 15
+      "stockMinimo": 15,
+      "requiereConfeccion": false,
+      "habilitado": true,
+      "fechaDeshabilitado": null
     }
   ],
   "pedidos": [
@@ -124,7 +199,7 @@
       "id": 1,
       "clienteId": 1,
       "numero": "PED-001",
-      "estado": "PENDIENTE",
+      "estado": "EN_CONFECCION",
       "detalles": [
         {
           "id": 1,
@@ -139,7 +214,10 @@
       "total": 10200000,
       "margen": 4000000,
       "fechaCreacion": "2026-02-15",
-      "observaciones": "Entrega para inicio de año escolar"
+      "observaciones": "Entrega para inicio de año escolar",
+      "habilitado": true,
+      "fechaDeshabilitado": null,
+      "updatedAt": "2026-02-23T00:02:17.812Z"
     },
     {
       "id": 2,
@@ -167,7 +245,9 @@
       "total": 5160000,
       "margen": 2150000,
       "fechaCreacion": "2026-02-18",
-      "observaciones": "Equipamiento para nuevo personal"
+      "observaciones": "Equipamiento para nuevo personal",
+      "habilitado": true,
+      "fechaDeshabilitado": null
     }
   ],
   "roles": [
@@ -175,8 +255,31 @@
       "id": 1,
       "nombre": "ADMIN",
       "descripcion": "Administrador con acceso total a todos los módulos",
-      "permisos": ["ver_dashboard", "crear_pedido", "editar_pedido", "eliminar_pedido", "ver_inventario", "editar_inventario", "ver_produccion", "editar_produccion", "ver_clientes", "crear_cliente", "editar_cliente", "eliminar_cliente", "ver_usuarios", "crear_usuario", "editar_usuario", "eliminar_usuario", "ver_roles", "crear_rol", "editar_rol", "eliminar_rol"],
+      "permisos": [
+        "ver_dashboard",
+        "crear_pedido",
+        "editar_pedido",
+        "eliminar_pedido",
+        "ver_inventario",
+        "editar_inventario",
+        "ver_produccion",
+        "editar_produccion",
+        "ver_clientes",
+        "crear_cliente",
+        "editar_cliente",
+        "eliminar_cliente",
+        "ver_usuarios",
+        "crear_usuario",
+        "editar_usuario",
+        "eliminar_usuario",
+        "ver_roles",
+        "crear_rol",
+        "editar_rol",
+        "eliminar_rol"
+      ],
       "activo": true,
+      "habilitado": true,
+      "fechaDeshabilitado": null,
       "createdAt": "2026-01-01T10:00:00Z",
       "updatedAt": "2026-01-01T10:00:00Z"
     },
@@ -184,8 +287,18 @@
       "id": 2,
       "nombre": "VENDEDOR",
       "descripcion": "Vendedor con acceso a clientes y pedidos",
-      "permisos": ["ver_dashboard", "crear_pedido", "editar_pedido", "ver_clientes", "crear_cliente", "editar_cliente"],
+      "permisos": [
+        "ver_dashboard",
+        "crear_pedido",
+        "editar_pedido",
+        "ver_clientes",
+        "crear_cliente",
+        "editar_cliente",
+        "crear_categoria"
+      ],
       "activo": true,
+      "habilitado": true,
+      "fechaDeshabilitado": null,
       "createdAt": "2026-01-01T10:00:00Z",
       "updatedAt": "2026-01-01T10:00:00Z"
     },
@@ -193,8 +306,16 @@
       "id": 3,
       "nombre": "OPERARIO",
       "descripcion": "Operario con acceso a producción e inventario",
-      "permisos": ["ver_dashboard", "ver_produccion", "editar_produccion", "ver_inventario", "editar_inventario"],
+      "permisos": [
+        "ver_dashboard",
+        "ver_produccion",
+        "editar_produccion",
+        "ver_inventario",
+        "editar_inventario"
+      ],
       "activo": true,
+      "habilitado": true,
+      "fechaDeshabilitado": null,
       "createdAt": "2026-01-01T10:00:00Z",
       "updatedAt": "2026-01-01T10:00:00Z"
     },
@@ -202,8 +323,24 @@
       "id": 4,
       "nombre": "GERENTE",
       "descripcion": "Gerente con acceso completo excepto gestión de usuarios",
-      "permisos": ["ver_dashboard", "crear_pedido", "editar_pedido", "eliminar_pedido", "ver_inventario", "editar_inventario", "ver_produccion", "editar_produccion", "ver_clientes", "crear_cliente", "editar_cliente", "eliminar_cliente"],
+      "permisos": [
+        "ver_dashboard",
+        "crear_pedido",
+        "editar_pedido",
+        "eliminar_pedido",
+        "ver_inventario",
+        "editar_inventario",
+        "ver_produccion",
+        "editar_produccion",
+        "ver_clientes",
+        "crear_cliente",
+        "editar_cliente",
+        "eliminar_cliente",
+        "crear_categoria"
+      ],
       "activo": true,
+      "habilitado": true,
+      "fechaDeshabilitado": null,
       "createdAt": "2026-01-01T10:00:00Z",
       "updatedAt": "2026-01-01T10:00:00Z"
     },
@@ -211,12 +348,19 @@
       "id": 5,
       "nombre": "SUPERVISOR",
       "descripcion": "Supervisor con acceso a reportes y validación",
-      "permisos": ["ver_dashboard", "ver_pedido", "ver_inventario", "ver_produccion", "ver_clientes"],
+      "permisos": [
+        "ver_dashboard",
+        "ver_pedido",
+        "ver_inventario",
+        "ver_produccion",
+        "ver_clientes",
+        "Ver Reportes",
+        "Exportar Datos"
+      ],
       "activo": true,
+      "habilitado": true,
       "createdAt": "2026-01-01T10:00:00Z",
-      "updatedAt": "2026-01-01T10:00:00Z"
+      "updatedAt": "2026-02-23T00:21:52.961Z"
     }
   ]
 }
-
-

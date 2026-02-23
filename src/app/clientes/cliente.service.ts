@@ -10,7 +10,7 @@ export class ClienteService {
   constructor(private http: HttpClient) {}
 
   obtenerTodos(): Observable<Cliente[]> {
-    return this.http.get<Cliente[]>(this.apiUrl);
+    return this.http.get<Cliente[]>(`${this.apiUrl}?habilitado=true`);
   }
 
   obtenerPorId(id: number): Observable<Cliente> {
@@ -18,30 +18,39 @@ export class ClienteService {
   }
 
   crear(cliente: Cliente): Observable<Cliente> {
-    return this.http.post<Cliente>(this.apiUrl, cliente);
+    const nuevoCliente = {
+      ...cliente,
+      habilitado: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    return this.http.post<Cliente>(this.apiUrl, nuevoCliente);
   }
 
   actualizar(id: number, cliente: Cliente): Observable<Cliente> {
-    return this.http.put<Cliente>(`${this.apiUrl}/${id}`, cliente);
+    const clienteActualizado = {
+      ...cliente,
+      updatedAt: new Date().toISOString()
+    };
+    return this.http.put<Cliente>(`${this.apiUrl}/${id}`, clienteActualizado);
   }
 
-  eliminar(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  eliminar(id: number): Observable<Cliente> {
+    return this.http.patch<Cliente>(`${this.apiUrl}/${id}`, {
+      habilitado: false,
+      fechaDeshabilitado: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    });
   }
 
   buscar(nombre: string, telefono: string): Observable<Cliente[]> {
-    let url = this.apiUrl;
-    const params: string[] = [];
+    let url = `${this.apiUrl}?habilitado=true`;
 
     if (nombre) {
-      params.push(`nombre_like=${nombre}`);
+      url += `&nombre_like=${nombre}`;
     }
     if (telefono) {
-      params.push(`telefono_like=${telefono}`);
-    }
-
-    if (params.length > 0) {
-      url += '?' + params.join('&');
+      url += `&telefono_like=${telefono}`;
     }
 
     return this.http.get<Cliente[]>(url);

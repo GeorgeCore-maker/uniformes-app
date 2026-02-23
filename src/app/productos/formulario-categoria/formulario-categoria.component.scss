@@ -1,6 +1,6 @@
-::ng-deep .formulario-producto-dialog {
+::ng-deep .formulario-categoria-dialog {
   .mdc-dialog__surface {
-    max-width: 700px;
+    max-width: 600px;
     width: 100%;
     max-height: 90vh;
     display: flex;
@@ -57,6 +57,20 @@ form {
   width: 100%;
 }
 
+mat-dialog-actions {
+  padding: 16px 24px 20px 24px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  border-top: 1px solid #e0e0e0;
+  flex-shrink: 0;
+}
+
+.full-width {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
 mat-form-field {
   display: block;
   width: 100%;
@@ -67,11 +81,7 @@ mat-form-field {
   }
 }
 
-mat-dialog-actions {
-  padding: 16px 24px 20px 24px;
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  border-top: 1px solid #e0e0e0;
-  flex-shrink: 0;
+textarea {
+  font-family: Roboto, sans-serif;
+  resize: none;
 }

@@ -11,7 +11,7 @@ export class PedidoService {
   constructor(private http: HttpClient) {}
 
   obtenerTodos(): Observable<Pedido[]> {
-    return this.http.get<Pedido[]>(this.apiUrl);
+    return this.http.get<Pedido[]>(`${this.apiUrl}?habilitado=true`);
   }
 
   obtenerPorId(id: number): Observable<Pedido> {
@@ -19,19 +19,33 @@ export class PedidoService {
   }
 
   crear(pedido: Pedido): Observable<Pedido> {
-    return this.http.post<Pedido>(this.apiUrl, pedido);
+    const nuevoPedido = {
+      ...pedido,
+      habilitado: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    return this.http.post<Pedido>(this.apiUrl, nuevoPedido);
   }
 
   actualizar(id: number, pedido: Pedido): Observable<Pedido> {
-    return this.http.put<Pedido>(`${this.apiUrl}/${id}`, pedido);
+    const pedidoActualizado = {
+      ...pedido,
+      updatedAt: new Date().toISOString()
+    };
+    return this.http.put<Pedido>(`${this.apiUrl}/${id}`, pedidoActualizado);
   }
 
-  eliminar(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  eliminar(id: number): Observable<Pedido> {
+    return this.http.patch<Pedido>(`${this.apiUrl}/${id}`, {
+      habilitado: false,
+      fechaDeshabilitado: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    });
   }
 
   obtenerPorEstado(estado: EstadoPedido): Observable<Pedido[]> {
-    return this.http.get<Pedido[]>(`${this.apiUrl}?estado=${estado}`);
+    return this.http.get<Pedido[]>(`${this.apiUrl}?estado=${estado}&habilitado=true`);
   }
 
   cambiarEstado(id: number, nuevoEstado: EstadoPedido): Observable<Pedido> {

@@ -228,7 +228,10 @@ export class ListaPedidosComponent implements OnInit {
 
   abrirFormulario(pedido?: Pedido) {
     const dialogRef = this.dialog.open(FormularioPedidoComponent, {
-      width: '600px',
+      width: '900px',
+      maxWidth: '95vw',
+      maxHeight: '95vh',
+      panelClass: 'formulario-pedido-dialog',
       data: pedido || {}
     });
 
@@ -261,39 +264,38 @@ export class ListaPedidosComponent implements OnInit {
     });
   }
 
-  cambiarEstado(pedido: Pedido) {
-    const estadoActual = Object.values(EstadoPedido).indexOf(pedido.estado);
-    const proximoEstado = Object.values(EstadoPedido)[estadoActual + 1];
+  cambiarEstado(pedido: Pedido, nuevoEstado: EstadoPedido) {
+    const dialogRef = this.dialog.open(DialogoConfirmacionComponent, {
+      width: '400px',
+      maxWidth: '90vw',
+      panelClass: 'dialogo-confirmacion-dialog',
+      data: {
+        titulo: 'Cambiar estado',
+        mensaje: `¿Cambiar pedido a ${nuevoEstado}?`
+      }
+    });
 
-    if (proximoEstado) {
-      const dialogRef = this.dialog.open(DialogoConfirmacionComponent, {
-        width: '300px',
-        data: {
-          titulo: 'Cambiar estado',
-          mensaje: `¿Cambiar pedido a ${proximoEstado}?`
-        }
-      });
-
-      dialogRef.afterClosed().subscribe((confirmado) => {
-        if (confirmado) {
-          this.pedidoService.cambiarEstado(pedido.id, proximoEstado).subscribe({
-            next: () => {
-              this.notificationService.success('Estado del pedido actualizado');
-              this.cargarPedidos();
-            },
-            error: (error) => {
-              console.error('Error al cambiar estado:', error);
-              this.notificationService.error('Error al cambiar el estado del pedido');
-            }
-          });
-        }
-      });
-    }
+    dialogRef.afterClosed().subscribe((confirmado) => {
+      if (confirmado) {
+        this.pedidoService.cambiarEstado(pedido.id, nuevoEstado).subscribe({
+          next: () => {
+            this.notificationService.success('Estado del pedido actualizado');
+            this.cargarPedidos();
+          },
+          error: (error) => {
+            console.error('Error al cambiar estado:', error);
+            this.notificationService.error('Error al cambiar el estado del pedido');
+          }
+        });
+      }
+    });
   }
 
   eliminar(pedido: Pedido) {
     const dialogRef = this.dialog.open(DialogoConfirmacionComponent, {
-      width: '300px',
+      width: '400px',
+      maxWidth: '90vw',
+      panelClass: 'dialogo-confirmacion-dialog',
       data: { titulo: 'Eliminar pedido', mensaje: `¿Está seguro de eliminar el pedido ${pedido.numero}?` }
     });
 

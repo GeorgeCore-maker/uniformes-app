@@ -10,10 +10,10 @@ export class UsuarioService {
   constructor(private http: HttpClient) {}
 
   /**
-   * Obtener todos los usuarios
+   * Obtener todos los usuarios habilitados
    */
   obtenerTodos(): Observable<Usuario[]> {
-    return this.http.get<Usuario[]>(this.apiUrl);
+    return this.http.get<Usuario[]>(`${this.apiUrl}?habilitado=true`);
   }
 
   /**
@@ -27,21 +27,35 @@ export class UsuarioService {
    * Crear nuevo usuario
    */
   crear(usuario: Usuario): Observable<Usuario> {
-    return this.http.post<Usuario>(this.apiUrl, usuario);
+    const nuevoUsuario = {
+      ...usuario,
+      habilitado: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    return this.http.post<Usuario>(this.apiUrl, nuevoUsuario);
   }
 
   /**
    * Actualizar usuario existente
    */
   actualizar(id: number, usuario: Usuario): Observable<Usuario> {
-    return this.http.put<Usuario>(`${this.apiUrl}/${id}`, usuario);
+    const usuarioActualizado = {
+      ...usuario,
+      updatedAt: new Date().toISOString()
+    };
+    return this.http.put<Usuario>(`${this.apiUrl}/${id}`, usuarioActualizado);
   }
 
   /**
-   * Eliminar usuario
+   * Eliminar usuario (Borrado lógico)
    */
-  eliminar(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  eliminar(id: number): Observable<Usuario> {
+    return this.http.patch<Usuario>(`${this.apiUrl}/${id}`, {
+      habilitado: false,
+      fechaDeshabilitado: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    });
   }
 
   /**

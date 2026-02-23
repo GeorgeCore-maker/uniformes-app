@@ -1,11 +1,16 @@
-<h2>{{ data.titulo }}</h2>
-<p>{{ data.mensaje }}</p>
+<div class="dialog-title-container">
+  <h2>{{ data.titulo }}</h2>
+</div>
 
-<div class="botones">
-  <button mat-raised-button color="warn" (click)="confirmar()">
-    Confirmar
-  </button>
+<mat-dialog-content>
+  <p>{{ data.mensaje }}</p>
+</mat-dialog-content>
+
+<mat-dialog-actions>
   <button mat-raised-button (click)="cancelar()">
     Cancelar
   </button>
-</div>
+  <button mat-raised-button color="warn" (click)="confirmar()">
+    Confirmar
+  </button>
+</mat-dialog-actions>

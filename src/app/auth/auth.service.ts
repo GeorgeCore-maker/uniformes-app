@@ -42,7 +42,8 @@ export class AuthService {
       username,
       password,
       role,
-      token: 'fake-jwt-token-' + Date.now()
+      token: 'fake-jwt-token-' + Date.now(),
+      habilitado: true
     };
     return this.http.post<Usuario>(this.apiUrl, newUser).pipe(
       map(() => true),

@@ -35,7 +35,7 @@ export class FormularioPedidoComponent implements OnInit {
   productos: Producto[] = [];
   clientes: Cliente[] = [];
   estados = Object.values(EstadoPedido);
-  displayedColumns: string[] = ['productoId', 'cantidad', 'precioUnitario', 'subtotal', 'eliminar'];
+  displayedColumns: string[] = ['productoId', 'cantidad', 'precioUnitario', 'subtotal', 'confeccion', 'eliminar'];
 
   constructor(
     private fb: FormBuilder,
@@ -79,13 +79,26 @@ export class FormularioPedidoComponent implements OnInit {
   }
 
   agregarDetalle() {
-    this.detalles.push(
-      this.fb.group({
-        productoId: ['', Validators.required],
-        cantidad: ['', [Validators.required, Validators.min(1)]],
-        precioUnitario: ['', [Validators.required, Validators.min(0)]]
-      })
-    );
+    const nuevoDetalle = this.fb.group({
+      productoId: ['', Validators.required],
+      cantidad: ['', [Validators.required, Validators.min(1)]],
+      precioUnitario: ['', [Validators.required, Validators.min(0)]]
+    });
+
+    this.detalles.push(nuevoDetalle);
+
+    // Suscribirse al cambio de productoId para actualizar el precio automáticamente
+    nuevoDetalle.get('productoId')?.valueChanges.subscribe((productoId: any) => {
+      if (productoId) {
+        const producto = this.productos.find(p => p.id === Number(productoId));
+        if (producto) {
+          nuevoDetalle.patchValue({
+            precioUnitario: producto.precio.toString()
+          }, { emitEvent: false });
+          this.calcularTotales();
+        }
+      }
+    });
   }
 
   eliminarDetalle(index: number) {
@@ -138,5 +151,14 @@ export class FormularioPedidoComponent implements OnInit {
   getProductoNombre(productoId: number): string {
     const producto = this.productos.find(p => p.id === productoId);
     return producto?.nombre || '';
+  }
+
+  getProducto(productoId: number): Producto | undefined {
+    return this.productos.find(p => p.id === productoId);
+  }
+
+  requiereConfeccion(productoId: number): boolean {
+    const producto = this.getProducto(productoId);
+    return producto?.requiereConfeccion || false;
   }
 }

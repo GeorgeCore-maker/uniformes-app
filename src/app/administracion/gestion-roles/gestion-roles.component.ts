@@ -107,6 +107,7 @@ export class GestionRolesComponent implements OnInit {
     const datosRol = {
       ...this.formularioRol.value,
       id: this.editandoRol?.id || Date.now(),
+      habilitado: this.formularioRol.get('activo')?.value || true,
       createdAt: this.editandoRol?.createdAt || new Date(),
       updatedAt: new Date()
     };

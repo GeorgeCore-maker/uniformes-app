@@ -118,9 +118,13 @@
       <ng-container matColumnDef="estado">
         <th mat-header-cell *matHeaderCellDef>Estado</th>
         <td mat-cell *matCellDef="let pedido">
-          <mat-chip [color]="getColorEstado(pedido.estado)" selected>
-            {{ pedido.estado }}
-          </mat-chip>
+          <mat-form-field appearance="outline" class="estado-select">
+            <mat-select [value]="pedido.estado" (selectionChange)="cambiarEstado(pedido, $event.value)">
+              <mat-option *ngFor="let est of estados" [value]="est">
+                {{ est }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
         </td>
       </ng-container>
 
@@ -146,9 +150,6 @@
         <td mat-cell *matCellDef="let pedido">
           <button mat-icon-button color="primary" (click)="exportarPedidoAPdf(pedido)" matTooltip="Exportar a PDF">
             <mat-icon>picture_as_pdf</mat-icon>
-          </button>
-          <button mat-icon-button color="primary" (click)="cambiarEstado(pedido)" matTooltip="Cambiar estado">
-            <mat-icon>arrow_forward</mat-icon>
           </button>
           <button mat-icon-button color="primary" (click)="abrirFormulario(pedido)" matTooltip="Editar">
             <mat-icon>edit</mat-icon>

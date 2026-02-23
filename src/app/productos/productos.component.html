@@ -1,1 +1,17 @@
-<app-lista-productos></app-lista-productos>
+<mat-tab-group>
+  <mat-tab label="Productos">
+    <ng-template mat-tab-label>
+      <mat-icon class="tab-icon">shopping_bag</mat-icon>
+      <span>Productos</span>
+    </ng-template>
+    <app-lista-productos></app-lista-productos>
+  </mat-tab>
+
+  <mat-tab label="Categorías">
+    <ng-template mat-tab-label>
+      <mat-icon class="tab-icon">category</mat-icon>
+      <span>Categorías</span>
+    </ng-template>
+    <app-lista-categorias></app-lista-categorias>
+  </mat-tab>
+</mat-tab-group>

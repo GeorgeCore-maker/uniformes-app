@@ -1,19 +1,115 @@
+::ng-deep .formulario-pedido-dialog {
+  .mdc-dialog__surface {
+    max-width: 900px;
+    width: 100%;
+    max-height: 95vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .mat-mdc-dialog-container {
+    max-height: 95vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+.dialog-title-container {
+  padding: 20px 24px 16px 24px;
+  border-bottom: 1px solid #e0e0e0;
+  flex-shrink: 0;
+
+  h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 500;
+    color: #1a1a1a;
+    letter-spacing: 0.25px;
+  }
+}
+
+mat-dialog-content {
+  padding: 20px 24px;
+  max-height: calc(95vh - 150px);
+  overflow-y: auto;
+  flex: 1;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+
+    &:hover {
+      background: #999;
+    }
+  }
+}
+
+form {
+  width: 100%;
+}
+
 mat-form-field {
   display: block;
   width: 100%;
-  margin-bottom: 15px;
+  margin-bottom: 16px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
 }
 
 .detalles-section {
-  margin: 20px 0;
+  margin: 24px 0;
 
   h3 {
-    margin-bottom: 15px;
+    margin: 16px 0;
+    font-size: 16px;
+    font-weight: 500;
+    color: #666;
+  }
+
+  .empty-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    background-color: #f9f9f9;
+    border: 2px dashed #ddd;
+    border-radius: 4px;
+    margin-bottom: 16px;
+    color: #999;
+
+    mat-icon {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+      margin-bottom: 16px;
+      color: #ccc;
+    }
+
+    p {
+      margin: 0;
+      font-size: 14px;
+      text-align: center;
+      max-width: 300px;
+    }
   }
 
   .detalles-tabla {
     width: 100%;
-    margin-bottom: 10px;
+    margin-bottom: 16px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
 
     mat-form-field {
       margin-bottom: 0;
@@ -21,19 +117,73 @@ mat-form-field {
     }
 
     td {
-      padding: 8px;
+      padding: 12px 8px;
+      border-right: 1px solid #eee;
+
+      &:last-child {
+        border-right: none;
+      }
+    }
+
+    th {
+      background-color: #f5f5f5;
+      padding: 12px 8px;
+      text-align: left;
+      font-weight: 500;
+      font-size: 12px;
+      border-right: 1px solid #eee;
+
+      &:last-child {
+        border-right: none;
+      }
+    }
+
+    // Badge para productos que requieren confección
+    .confeccion-badge {
+      background-color: #ff9800;
+      color: white;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      margin-left: 4px;
+      font-weight: 600;
+      display: inline-block;
+    }
+
+    // Labels para la columna de confección
+    .confeccion-label {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: #ff9800;
+      font-weight: 600;
+      font-size: 13px;
+
+      mat-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+      }
+    }
+
+    .sin-confeccion-label {
+      color: #999;
+      font-size: 13px;
     }
   }
 
   .btn-agregar {
-    margin-bottom: 20px;
+    margin-bottom: 16px;
   }
 }
 
 .totales {
   display: flex;
-  gap: 15px;
-  margin: 20px 0;
+  gap: 16px;
+  margin: 24px 0;
+  padding: 16px;
+  background-color: #f9f9f9;
+  border-radius: 4px;
 
   mat-form-field {
     flex: 1;
@@ -41,9 +191,11 @@ mat-form-field {
   }
 }
 
-.botones {
+mat-dialog-actions {
+  padding: 16px 24px 20px 24px;
   display: flex;
-  gap: 10px;
   justify-content: flex-end;
-  margin-top: 20px;
+  gap: 12px;
+  border-top: 1px solid #e0e0e0;
+  flex-shrink: 0;
 }

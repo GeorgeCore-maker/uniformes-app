@@ -98,7 +98,10 @@ export class ListaProductosComponent implements OnInit {
 
   abrirFormulario(producto?: Producto) {
     const dialogRef = this.dialog.open(FormularioProductoComponent, {
-      width: '500px',
+      width: '700px',
+      maxWidth: '90vw',
+      maxHeight: '90vh',
+      panelClass: 'formulario-producto-dialog',
       data: producto || {}
     });
 
@@ -119,7 +122,9 @@ export class ListaProductosComponent implements OnInit {
 
   eliminar(producto: Producto) {
     const dialogRef = this.dialog.open(DialogoConfirmacionComponent, {
-      width: '300px',
+      width: '400px',
+      maxWidth: '90vw',
+      panelClass: 'dialogo-confirmacion-dialog',
       data: { titulo: 'Eliminar producto', mensaje: `¿Está seguro de eliminar a ${producto.nombre}?` }
     });
 

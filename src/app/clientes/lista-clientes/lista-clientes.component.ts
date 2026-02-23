@@ -93,7 +93,10 @@ export class ListaClientesComponent implements OnInit {
 
   abrirFormulario(cliente?: Cliente) {
     const dialogRef = this.dialog.open(FormularioClienteComponent, {
-      width: '500px',
+      width: '600px',
+      maxWidth: '90vw',
+      maxHeight: '90vh',
+      panelClass: 'formulario-cliente-dialog',
       data: cliente || {}
     });
 
@@ -114,7 +117,9 @@ export class ListaClientesComponent implements OnInit {
 
   eliminar(cliente: Cliente) {
     const dialogRef = this.dialog.open(DialogoConfirmacionComponent, {
-      width: '300px',
+      width: '400px',
+      maxWidth: '90vw',
+      panelClass: 'dialogo-confirmacion-dialog',
       data: { titulo: 'Eliminar cliente', mensaje: `¿Está seguro de eliminar a ${cliente.nombre}?` }
     });
 

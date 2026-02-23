@@ -1,0 +1,64 @@
+<div class="container">
+  <div class="header">
+    <h2>Gestión de Categorías</h2>
+    <button mat-raised-button color="primary" (click)="abrirFormulario()" class="btn-nuevo">
+      <mat-icon>add</mat-icon>
+      Nueva Categoría
+    </button>
+  </div>
+
+  <div class="filtros">
+    <mat-form-field class="filtro">
+      <mat-label>Buscar</mat-label>
+      <input matInput [(ngModel)]="filtroBusqueda" (keyup)="buscar()" placeholder="Nombre o descripción">
+    </mat-form-field>
+    <button mat-icon-button (click)="limpiarFiltros()" matTooltip="Limpiar filtros">
+      <mat-icon>clear</mat-icon>
+    </button>
+  </div>
+
+  <div class="tabla-container">
+    <table mat-table [dataSource]="categoriasPaginadas" class="tabla">
+      <!-- Columna ID -->
+      <ng-container matColumnDef="id">
+        <th mat-header-cell *matHeaderCellDef>ID</th>
+        <td mat-cell *matCellDef="let element">{{ element.id }}</td>
+      </ng-container>
+
+      <!-- Columna Nombre -->
+      <ng-container matColumnDef="nombre">
+        <th mat-header-cell *matHeaderCellDef>Nombre</th>
+        <td mat-cell *matCellDef="let element">{{ element.nombre }}</td>
+      </ng-container>
+
+      <!-- Columna Descripción -->
+      <ng-container matColumnDef="descripcion">
+        <th mat-header-cell *matHeaderCellDef>Descripción</th>
+        <td mat-cell *matCellDef="let element">{{ element.descripcion || 'N/A' }}</td>
+      </ng-container>
+
+      <!-- Columna Acciones -->
+      <ng-container matColumnDef="acciones">
+        <th mat-header-cell *matHeaderCellDef>Acciones</th>
+        <td mat-cell *matCellDef="let element">
+          <button mat-icon-button (click)="abrirFormulario(element)" matTooltip="Editar">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button (click)="eliminar(element)" matTooltip="Eliminar" color="warn">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+  </div>
+
+  <mat-paginator
+    [length]="totalItems"
+    [pageSize]="pageSize"
+    [pageSizeOptions]="pageSizeOptions"
+    (page)="onPageChange($event)"
+  ></mat-paginator>
+</div>

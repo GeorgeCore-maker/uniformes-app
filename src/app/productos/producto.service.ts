@@ -11,7 +11,7 @@ export class ProductoService {
   constructor(private http: HttpClient) {}
 
   obtenerTodos(): Observable<Producto[]> {
-    return this.http.get<Producto[]>(this.apiUrl);
+    return this.http.get<Producto[]>(`${this.apiUrl}?habilitado=true`);
   }
 
   obtenerPorId(id: number): Observable<Producto> {
@@ -19,19 +19,33 @@ export class ProductoService {
   }
 
   crear(producto: Producto): Observable<Producto> {
-    return this.http.post<Producto>(this.apiUrl, producto);
+    const nuevoProducto = {
+      ...producto,
+      habilitado: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    return this.http.post<Producto>(this.apiUrl, nuevoProducto);
   }
 
   actualizar(id: number, producto: Producto): Observable<Producto> {
-    return this.http.put<Producto>(`${this.apiUrl}/${id}`, producto);
+    const productoActualizado = {
+      ...producto,
+      updatedAt: new Date().toISOString()
+    };
+    return this.http.put<Producto>(`${this.apiUrl}/${id}`, productoActualizado);
   }
 
-  eliminar(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  eliminar(id: number): Observable<Producto> {
+    return this.http.patch<Producto>(`${this.apiUrl}/${id}`, {
+      habilitado: false,
+      fechaDeshabilitado: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    });
   }
 
   obtenerPorCategoria(categoria: CategoriaProducto): Observable<Producto[]> {
-    return this.http.get<Producto[]>(`${this.apiUrl}?categoria=${categoria}`);
+    return this.http.get<Producto[]>(`${this.apiUrl}?categoria=${categoria}&habilitado=true`);
   }
 
   obtenerStockBajo(): Observable<Producto[]> {

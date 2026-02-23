@@ -19,6 +19,16 @@ export enum CategoriaProducto {
   DOTACION_SERVICIOS = 'DOTACION_SERVICIOS'
 }
 
+export interface Categoria {
+  id?: number;
+  nombre: string;
+  descripcion?: string;
+  habilitado: boolean;
+  fechaDeshabilitado?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
 // Interfaces
 export interface Rol {
   id: number;
@@ -26,6 +36,8 @@ export interface Rol {
   descripcion?: string;
   permisos: string[];
   activo: boolean;
+  habilitado: boolean;  // Borrado lógico
+  fechaDeshabilitado?: string;  // Fecha y hora del deshabilitado
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -38,6 +50,8 @@ export interface Cliente {
   direccion?: string;
   ciudad?: string;
   nit?: string;
+  habilitado: boolean;  // Borrado lógico
+  fechaDeshabilitado?: string;  // Fecha y hora del deshabilitado
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -53,6 +67,9 @@ export interface Producto {
   stock: number;
   stockMinimo: number;
   imagen?: string;
+  requiereConfeccion: boolean;  // Si el producto necesita ser confeccionado
+  habilitado: boolean;  // Borrado lógico
+  fechaDeshabilitado?: string;  // Fecha y hora del deshabilitado
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -80,6 +97,8 @@ export interface Pedido {
   fechaCreacion: Date;
   fechaEntrega?: Date;
   observaciones?: string;
+  habilitado: boolean;  // Borrado lógico
+  fechaDeshabilitado?: string;  // Fecha y hora del deshabilitado
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -93,6 +112,8 @@ export interface Usuario {
   rolId?: number;
   token?: string;
   activo?: boolean;
+  habilitado: boolean;  // Borrado lógico
+  fechaDeshabilitado?: string;  // Fecha y hora del deshabilitado
   createdAt?: Date;
   updatedAt?: Date;
 }
