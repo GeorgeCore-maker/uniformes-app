@@ -16,10 +16,11 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { PedidoService } from '../pedido.service';
 import { Pedido, EstadoPedido } from '../../shared/models/models';
 import { FormularioPedidoComponent } from '../formulario-pedido/formulario-pedido.component';
-import { DialogoConfirmacionComponent } from '../dialogo-confirmacion/dialogo-confirmacion.component';
+import { DialogoService } from '../../shared';
 import { ExportService } from '../../core/services/export.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { VentasFilterService, RangoFechas } from '../../core/services/ventas-filter.service';
+import { ProduccionService } from '../../produccion/produccion.service';
 
 @Component({
   selector: 'app-lista-pedidos',
@@ -47,7 +48,7 @@ import { VentasFilterService, RangoFechas } from '../../core/services/ventas-fil
 export class ListaPedidosComponent implements OnInit {
   pedidos: Pedido[] = [];
   pedidosFiltrados: Pedido[] = [];
-  displayedColumns: string[] = ['id', 'numero', 'clienteId', 'estado', 'subtotal', 'total', 'acciones'];
+  displayedColumns: string[] = ['id', 'numero', 'clienteId', 'subtotal', 'total', 'acciones'];
   pageSizeOptions: number[] = [5, 10, 25];
   pageSize = 5;
   currentPage = 0;
@@ -67,7 +68,9 @@ export class ListaPedidosComponent implements OnInit {
     private exportService: ExportService,
     private notificationService: NotificationService,
     private ventasFilterService: VentasFilterService,
-    private fb: FormBuilder
+    private produccionService: ProduccionService,
+    private fb: FormBuilder,
+    private dialogoService: DialogoService
   ) {
     this.rangoFechasActual = this.ventasFilterService.obtenerRangoFechasActual();
     this.formularioFechas = this.fb.group({
@@ -92,6 +95,20 @@ export class ListaPedidosComponent implements OnInit {
     this.pedidoService.obtenerTodos().subscribe({
       next: (pedidos) => {
         this.pedidos = pedidos;
+
+        // Asegurarse de que el filtro de fechas incluya hoy
+        const hoy = new Date();
+        const rangoActual = this.rangoFechasActual;
+
+        // Si la fecha fin es anterior a hoy, actualizarla a hoy
+        if (rangoActual.fechaFin < hoy) {
+          const nuevoRango = {
+            fechaInicio: rangoActual.fechaInicio,
+            fechaFin: hoy
+          };
+          this.ventasFilterService.actualizarRangoFechas(nuevoRango);
+        }
+
         this.aplicarFiltros();
         this.notificationService.success('Pedidos cargados correctamente');
       },
@@ -238,6 +255,7 @@ export class ListaPedidosComponent implements OnInit {
     dialogRef.afterClosed().subscribe((resultado) => {
       if (resultado) {
         if (pedido?.id) {
+          // Para edición, el resultado ya incluye las propiedades originales del pedido
           this.pedidoService.actualizar(pedido.id, resultado).subscribe({
             next: () => {
               this.notificationService.success('Pedido actualizado correctamente');
@@ -250,8 +268,14 @@ export class ListaPedidosComponent implements OnInit {
           });
         } else {
           this.pedidoService.crear(resultado).subscribe({
-            next: () => {
+            next: (pedidoCreado) => {
               this.notificationService.success('Pedido creado correctamente');
+
+              // Crear items de producción si es necesario
+              if (resultado.crearItemsProduccion && pedidoCreado.detalles) {
+                this.crearItemsProduccion(pedidoCreado);
+              }
+
               this.cargarPedidos();
             },
             error: (error) => {
@@ -264,18 +288,39 @@ export class ListaPedidosComponent implements OnInit {
     });
   }
 
-  cambiarEstado(pedido: Pedido, nuevoEstado: EstadoPedido) {
-    const dialogRef = this.dialog.open(DialogoConfirmacionComponent, {
-      width: '400px',
-      maxWidth: '90vw',
-      panelClass: 'dialogo-confirmacion-dialog',
-      data: {
-        titulo: 'Cambiar estado',
-        mensaje: `¿Cambiar pedido a ${nuevoEstado}?`
-      }
-    });
+  private crearItemsProduccion(pedido: Pedido): void {
+    // Filtrar detalles que necesitan producción (PENDIENTE o EN_CONFECCION)
+    const detallesParaProduccion = pedido.detalles?.filter(detalle =>
+      detalle.estado === EstadoPedido.PENDIENTE || detalle.estado === EstadoPedido.EN_CONFECCION
+    ) || [];
 
-    dialogRef.afterClosed().subscribe((confirmado) => {
+    if (detallesParaProduccion.length > 0) {
+      this.produccionService.crearItemsDesdeDetallePedido(
+        pedido.id,
+        pedido.numero,
+        detallesParaProduccion
+      ).subscribe({
+        next: (itemsCreados) => {
+          if (itemsCreados.length > 0) {
+            this.notificationService.success(
+              `${itemsCreados.length} item(s) agregado(s) a producción automáticamente`
+            );
+          }
+        },
+        error: (error) => {
+          console.error('Error al crear items de producción:', error);
+          this.notificationService.error('Error al crear items de producción');
+        }
+      });
+    }
+  }
+
+  cambiarEstado(pedido: Pedido, nuevoEstado: EstadoPedido) {
+    this.dialogoService.confirmarAccion(
+      'Cambiar estado',
+      `¿Cambiar pedido a ${nuevoEstado}?`,
+      'Cambiar'
+    ).subscribe((confirmado) => {
       if (confirmado) {
         this.pedidoService.cambiarEstado(pedido.id, nuevoEstado).subscribe({
           next: () => {
@@ -292,14 +337,10 @@ export class ListaPedidosComponent implements OnInit {
   }
 
   eliminar(pedido: Pedido) {
-    const dialogRef = this.dialog.open(DialogoConfirmacionComponent, {
-      width: '400px',
-      maxWidth: '90vw',
-      panelClass: 'dialogo-confirmacion-dialog',
-      data: { titulo: 'Eliminar pedido', mensaje: `¿Está seguro de eliminar el pedido ${pedido.numero}?` }
-    });
-
-    dialogRef.afterClosed().subscribe((confirmado) => {
+    this.dialogoService.confirmarEliminacion(
+      'Eliminar pedido',
+      `¿Está seguro de eliminar el pedido ${pedido.numero}?`
+    ).subscribe((confirmado) => {
       if (confirmado) {
         this.pedidoService.eliminar(pedido.id).subscribe({
           next: () => {

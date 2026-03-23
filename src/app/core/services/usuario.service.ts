@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 import { Usuario } from '../../shared/models/models';
 
 @Injectable({ providedIn: 'root' })
@@ -13,7 +14,7 @@ export class UsuarioService {
    * Obtener todos los usuarios habilitados
    */
   obtenerTodos(): Observable<Usuario[]> {
-    return this.http.get<Usuario[]>(`${this.apiUrl}?habilitado=true`);
+    return this.http.get<Usuario[]>(`${this.apiUrl}`);
   }
 
   /**
@@ -69,6 +70,19 @@ export class UsuarioService {
    * Cambiar estado activo/inactivo del usuario
    */
   cambiarEstado(usuarioId: number, activo: boolean): Observable<Usuario> {
-    return this.http.patch<Usuario>(`${this.apiUrl}/${usuarioId}`, { activo });
+    return this.http.patch<Usuario>(`${this.apiUrl}/${usuarioId}`, {
+      activo,
+      updatedAt: new Date().toISOString()
+    });
+  }
+
+  /**
+   * Verificar si un usuario puede acceder al sistema
+   */
+  puedeAcceder(usuarioId: number): Observable<boolean> {
+    return this.obtenerPorId(usuarioId).pipe(
+      map(usuario => usuario && usuario.activo !== false && usuario.habilitado !== false),
+      catchError(() => of(false))
+    );
   }
 }

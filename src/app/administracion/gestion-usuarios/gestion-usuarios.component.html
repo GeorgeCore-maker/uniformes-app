@@ -65,7 +65,7 @@
 
   <!-- Tabla de Usuarios -->
   <div class="tabla-container" *ngIf="!mostrarFormulario">
-    <table mat-table [dataSource]="usuarios" class="usuarios-table">
+    <table mat-table [dataSource]="usuariosHabilitados" class="usuarios-table">
       <!-- ID Column -->
       <ng-container matColumnDef="id">
         <th mat-header-cell *matHeaderCellDef>ID</th>

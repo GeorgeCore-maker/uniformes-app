@@ -52,8 +52,27 @@ export class VentasFilterService {
     const rango = rangoFechas || this.obtenerRangoFechasActual();
 
     return pedidos.filter((pedido: Pedido) => {
-      const fechaCreacion = new Date(pedido.fechaCreacion);
-      return fechaCreacion >= rango.fechaInicio && fechaCreacion <= rango.fechaFin;
+      // Intentar obtener la fecha de creación desde diferentes propiedades
+      let fechaCreacion: Date;
+
+      if (pedido.fechaCreacion) {
+        fechaCreacion = new Date(pedido.fechaCreacion);
+      } else if (pedido.createdAt) {
+        fechaCreacion = new Date(pedido.createdAt);
+      } else if (pedido.updatedAt) {
+        // Como último recurso, usar updatedAt
+        fechaCreacion = new Date(pedido.updatedAt);
+      } else {
+        // Si no hay fecha, usar la fecha actual
+        fechaCreacion = new Date();
+      }
+
+      // Normalizar fechas para comparación (solo año, mes, día)
+      const fechaCreacionNorm = new Date(fechaCreacion.getFullYear(), fechaCreacion.getMonth(), fechaCreacion.getDate());
+      const fechaInicioNorm = new Date(rango.fechaInicio.getFullYear(), rango.fechaInicio.getMonth(), rango.fechaInicio.getDate());
+      const fechaFinNorm = new Date(rango.fechaFin.getFullYear(), rango.fechaFin.getMonth(), rango.fechaFin.getDate());
+
+      return fechaCreacionNorm >= fechaInicioNorm && fechaCreacionNorm <= fechaFinNorm;
     });
   }
 

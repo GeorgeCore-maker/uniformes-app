@@ -13,7 +13,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { ProductoService } from '../producto.service';
 import { Producto, CategoriaProducto } from '../../shared/models/models';
 import { FormularioProductoComponent } from '../formulario-producto/formulario-producto.component';
-import { DialogoConfirmacionComponent } from '../dialogo-confirmacion/dialogo-confirmacion.component';
+import { DialogoService } from '../../shared';
 
 @Component({
   selector: 'app-lista-productos',
@@ -50,7 +50,8 @@ export class ListaProductosComponent implements OnInit {
 
   constructor(
     private productoService: ProductoService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private dialogoService: DialogoService
   ) {}
 
   ngOnInit() {
@@ -121,14 +122,10 @@ export class ListaProductosComponent implements OnInit {
   }
 
   eliminar(producto: Producto) {
-    const dialogRef = this.dialog.open(DialogoConfirmacionComponent, {
-      width: '400px',
-      maxWidth: '90vw',
-      panelClass: 'dialogo-confirmacion-dialog',
-      data: { titulo: 'Eliminar producto', mensaje: `¿Está seguro de eliminar a ${producto.nombre}?` }
-    });
-
-    dialogRef.afterClosed().subscribe((confirmado) => {
+    this.dialogoService.confirmarEliminacion(
+      'Eliminar producto',
+      `¿Está seguro de eliminar a ${producto.nombre}?`
+    ).subscribe((confirmado) => {
       if (confirmado) {
         this.productoService.eliminar(producto.id).subscribe(() => {
           this.cargarProductos();

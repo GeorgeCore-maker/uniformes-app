@@ -81,6 +81,24 @@ export interface DetallePedido {
   cantidad: number;
   precioUnitario: number;
   subtotal: number;
+  estado: EstadoPedido; // Estado individual para cada item del pedido
+}
+
+export interface ItemProduccion {
+  id?: number;
+  pedidoId: number;
+  pedidoNumero: string;
+  detalleId: number;
+  productoId: number;
+  producto?: Producto;
+  cantidad: number;
+  estado: EstadoPedido;
+  fechaInicio?: Date;
+  fechaEstimadaFinalizacion?: Date;
+  observaciones?: string;
+  habilitado: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface Pedido {
@@ -89,6 +107,7 @@ export interface Pedido {
   cliente?: Cliente;
   numero: string;
   estado: EstadoPedido;
+  incluirIva: boolean;  // Control para aplicar o no el IVA
   detalles: DetallePedido[];
   subtotal: number;
   impuesto?: number;

@@ -14,6 +14,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { UsuarioService } from '../../core/services/usuario.service';
 import { RolService } from '../../core/services/rol.service';
 import { NotificationService } from '../../core/services/notification.service';
+import { DialogoService } from '../../shared';
 import { Usuario, Rol } from '../../shared/models/models';
 
 @Component({
@@ -39,6 +40,7 @@ import { Usuario, Rol } from '../../shared/models/models';
 })
 export class GestionUsuariosComponent implements OnInit {
   usuarios: Usuario[] = [];
+  usuariosHabilitados: Usuario[] = [];
   roles: Rol[] = [];
   formularioUsuario: FormGroup;
   mostrarFormulario = false;
@@ -49,7 +51,8 @@ export class GestionUsuariosComponent implements OnInit {
     private fb: FormBuilder,
     private usuarioService: UsuarioService,
     private rolService: RolService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private dialogoService: DialogoService
   ) {
     this.formularioUsuario = this.fb.group({
       username: ['', [Validators.required, Validators.minLength(3)]],
@@ -69,6 +72,8 @@ export class GestionUsuariosComponent implements OnInit {
     this.usuarioService.obtenerTodos().subscribe({
       next: (usuarios: Usuario[]) => {
         this.usuarios = usuarios;
+        // Filtrar solo usuarios habilitados para la tabla
+        this.usuariosHabilitados = usuarios.filter(u => u.habilitado !== false);
         this.notificationService.success('Usuarios cargados correctamente');
       },
       error: (error: any) => {
@@ -125,6 +130,7 @@ export class GestionUsuariosComponent implements OnInit {
       ...this.formularioUsuario.value,
       id: this.editandoUsuario?.id || Date.now(),
       token: this.editandoUsuario?.token || 'fake-jwt-token-' + Date.now(),
+      habilitado: this.editandoUsuario?.habilitado !== false, // Preservar el estado habilitado
       createdAt: this.editandoUsuario?.createdAt || new Date(),
       updatedAt: new Date()
     };
@@ -186,18 +192,23 @@ export class GestionUsuariosComponent implements OnInit {
   }
 
   eliminarUsuario(usuario: Usuario): void {
-    if (confirm(`¿Está seguro de que desea eliminar el usuario "${usuario.username}"?`)) {
-      this.usuarioService.eliminar(usuario.id).subscribe({
-        next: () => {
-          this.notificationService.success('Usuario eliminado correctamente');
-          this.cargarUsuarios();
-        },
-        error: (error: any) => {
-          console.error('Error al eliminar usuario:', error);
-          this.notificationService.error('Error al eliminar el usuario');
-        }
-      });
-    }
+    this.dialogoService.confirmarEliminacion(
+      'Eliminar usuario',
+      `¿Está seguro de que desea eliminar el usuario "${usuario.username}"?`
+    ).subscribe((confirmado) => {
+      if (confirmado) {
+        this.usuarioService.eliminar(usuario.id).subscribe({
+          next: () => {
+            this.notificationService.success('Usuario eliminado correctamente');
+            this.cargarUsuarios();
+          },
+          error: (error: any) => {
+            console.error('Error al eliminar usuario:', error);
+            this.notificationService.error('Error al eliminar el usuario');
+          }
+        });
+      }
+    });
   }
 
   obtenerNombreRol(role: string | number): string {
