@@ -12,7 +12,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { CategoriaService } from '../categoria.service';
 import { Categoria } from '../../shared/models/models';
 import { FormularioCategoriaComponent } from '../formulario-categoria/formulario-categoria.component';
-import { DialogoConfirmacionComponent } from '../dialogo-confirmacion/dialogo-confirmacion.component';
+import { DialogoService } from '../../shared/services/dialogo.service';
 
 @Component({
   selector: 'app-lista-categorias',
@@ -46,7 +46,8 @@ export class ListaCategoriasComponent implements OnInit {
 
   constructor(
     private categoriaService: CategoriaService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private dialogoService: DialogoService
   ) {}
 
   ngOnInit() {
@@ -116,14 +117,10 @@ export class ListaCategoriasComponent implements OnInit {
   }
 
   eliminar(categoria: Categoria) {
-    const dialogRef = this.dialog.open(DialogoConfirmacionComponent, {
-      width: '400px',
-      maxWidth: '90vw',
-      panelClass: 'dialogo-confirmacion-dialog',
-      data: { titulo: 'Eliminar categoría', mensaje: `¿Está seguro de eliminar la categoría "${categoria.nombre}"?` }
-    });
-
-    dialogRef.afterClosed().subscribe((confirmado) => {
+    this.dialogoService.confirmarEliminacion(
+      'Eliminar categoría',
+      `¿Está seguro de eliminar la categoría "${categoria.nombre}"?`
+    ).subscribe((confirmado) => {
       if (confirmado) {
         this.categoriaService.eliminar(categoria.id!).subscribe(() => {
           this.cargarCategorias();

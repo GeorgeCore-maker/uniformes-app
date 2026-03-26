@@ -1,0 +1,186 @@
+// Prisma Schema para Fase 1 - SQLite Local con DBeaver
+// Optimizado para SQLite y compatibilidad con datos existentes
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./uniformes.db"
+}
+
+// === USUARIOS Y AUTENTICACIÓN ===
+model User {
+  id                 Int       @id @default(autoincrement())
+  username           String    @unique
+  password           String
+  role               String    // ADMIN, VENDEDOR, OPERARIO
+  activo             Boolean   @default(true)
+  habilitado         Boolean   @default(true)
+  token              String?
+  fechaDeshabilitado DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  // Relaciones
+  pedidosCreados     Pedido[]  @relation("PedidoCreador")
+  movimientos        MovimientoInventario[]
+
+  @@map("users")
+}
+
+// === CLIENTES ===
+model Cliente {
+  id                 Int       @id @default(autoincrement())
+  nombre             String
+  telefono           String
+  email              String
+  direccion          String
+  ciudad             String
+  nit                String    @unique
+  activo             Boolean   @default(true)    // Para restringir creación de pedidos
+  habilitado         Boolean   @default(true)    // Para soft delete
+  fechaDeshabilitado DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  // Relaciones
+  pedidos            Pedido[]
+
+  @@map("clientes")
+}
+
+// === PRODUCTOS Y CATEGORÍAS ===
+model Categoria {
+  id          Int       @id @default(autoincrement())
+  nombre      String    @unique
+  descripcion String?
+  habilitado  Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relaciones
+  productos   Producto[]
+
+  @@map("categorias")
+}
+
+model Producto {
+  id                 Int       @id @default(autoincrement())
+  nombre             String
+  descripcion        String?
+  precio             Float     // Usando Float para SQLite
+  categoria          String
+  categoriaId        Int
+  stockActual        Int       @default(0)
+  stockMinimo        Int       @default(5)
+  requiereConfeccion Boolean   @default(false)
+  habilitado         Boolean   @default(true)    // Para soft delete (removemos activo)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  // Relaciones
+  categoriaRef       Categoria        @relation(fields: [categoriaId], references: [id])
+  detallesPedidos    DetallePedido[]
+  itemsProduccion    ItemProduccion[]
+  movimientos        MovimientoInventario[]
+
+  @@map("productos")
+}
+
+// === PEDIDOS ===
+model Pedido {
+  id                Int             @id @default(autoincrement())
+  numero            String          @unique // PED-001, PED-002...
+  clienteId         Int
+  creadorId         Int
+  fechaPedido       DateTime        @default(now())
+  fechaEntrega      DateTime?
+  estado            String          @default("PENDIENTE")
+  descuento         Float           @default(0)
+  total             Float
+  observaciones     String?
+  habilitado        Boolean         @default(true)    // Para soft delete
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  // Relaciones
+  cliente           Cliente         @relation(fields: [clienteId], references: [id])
+  creador           User            @relation("PedidoCreador", fields: [creadorId], references: [id])
+  detalles          DetallePedido[]
+
+  @@map("pedidos")
+}
+
+model DetallePedido {
+  id          Int      @id @default(autoincrement())
+  pedidoId    Int
+  productoId  Int
+  cantidad    Int
+  precioUnit  Float
+  subtotal    Float
+  estado      String   @default("PENDIENTE")
+  habilitado  Boolean  @default(true)    // Para soft delete
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relaciones
+  pedido      Pedido   @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+  producto    Producto @relation(fields: [productoId], references: [id])
+  itemsProduccion ItemProduccion[]
+
+  @@map("detalle_pedidos")
+}
+
+// === PRODUCCIÓN ===
+model ItemProduccion {
+  id                Int      @id @default(autoincrement())
+  productoId        Int
+  detallePedidoId   Int?     // Opcional, para items de pedidos específicos
+  cantidad          Int
+  cantidadCompletada Int     @default(0)
+  estado            String   @default("PENDIENTE")
+  prioridad         String   @default("NORMAL")
+  fechaInicio       DateTime?
+  fechaFin          DateTime?
+  observaciones     String?
+  habilitado        Boolean  @default(true)    // Para soft delete
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relaciones
+  producto          Producto      @relation(fields: [productoId], references: [id])
+  detallePedido     DetallePedido? @relation(fields: [detallePedidoId], references: [id])
+
+  @@map("items_produccion")
+}
+
+// === INVENTARIO ===
+model MovimientoInventario {
+  id          Int      @id @default(autoincrement())
+  productoId  Int
+  usuarioId   Int?
+  tipo        String   // ENTRADA, SALIDA, AJUSTE, PRODUCCION
+  cantidad    Int      // Positivo para entradas, negativo para salidas
+  stockAnterior Int?
+  stockNuevo  Int?
+  referencia  String?  // ID de pedido, producción, etc.
+  motivo      String?
+  createdAt   DateTime @default(now())
+
+  // Relaciones
+  producto    Producto @relation(fields: [productoId], references: [id])
+  usuario     User?    @relation(fields: [usuarioId], references: [id])
+
+  @@map("movimientos_inventario")
+}
+
+// === CONFIGURACIÓN ===
+model Configuracion {
+  id    Int    @id @default(autoincrement())
+  clave String @unique
+  valor String
+
+  @@map("configuracion")
+}

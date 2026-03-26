@@ -1,0 +1,32 @@
+# Dockerfile para Fase 2 - PostgreSQL
+# docker/Dockerfile.postgres
+
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Instalar dependencias del sistema
+RUN apk add --no-cache postgresql-client
+
+# Copiar archivos de package
+COPY package*.json ./
+COPY prisma ./prisma/
+
+# Instalar dependencias
+RUN npm ci --only=production
+
+# Copiar código fuente
+COPY . .
+
+# Generar cliente Prisma
+RUN npx prisma generate
+
+# Exponer puerto
+EXPOSE 3000
+
+# Variables de entorno para PostgreSQL
+ENV DATABASE_URL="postgresql://uniformes:uniformes123@postgres:5432/uniformes_db"
+ENV NODE_ENV=production
+
+# Comando de inicio
+CMD ["sh", "-c", "npx prisma migrate deploy && npm start"]

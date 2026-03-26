@@ -5,12 +5,12 @@ import { Cliente } from '../shared/models/models';
 
 @Injectable({ providedIn: 'root' })
 export class ClienteService {
-  private apiUrl = 'http://localhost:3000/clientes';
+  private apiUrl = 'http://localhost:3001/api/clientes'; // Nueva API Prisma
 
   constructor(private http: HttpClient) {}
 
   obtenerTodos(): Observable<Cliente[]> {
-    return this.http.get<Cliente[]>(`${this.apiUrl}?habilitado=true`);
+    return this.http.get<Cliente[]>(this.apiUrl);
   }
 
   obtenerPorId(id: number): Observable<Cliente> {

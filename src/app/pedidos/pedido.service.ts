@@ -6,7 +6,7 @@ import { Pedido, EstadoPedido } from '../shared/models/models';
 
 @Injectable({ providedIn: 'root' })
 export class PedidoService {
-  private apiUrl = 'http://localhost:3000/pedidos';
+  private apiUrl = 'http://localhost:3001/api/pedidos';
 
   constructor(private http: HttpClient) {}
 

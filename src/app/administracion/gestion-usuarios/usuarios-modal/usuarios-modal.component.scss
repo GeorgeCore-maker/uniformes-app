@@ -1,0 +1,39 @@
+.usuario-modal {
+  min-width: 400px;
+  max-width: 600px;
+}
+
+.usuario-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 20px 0;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.toggle-container {
+  display: flex;
+  align-items: center;
+  margin: 16px 0;
+}
+
+.activo-toggle {
+  margin-left: 16px;
+}
+
+::ng-deep .mat-mdc-dialog-actions {
+  padding: 16px 24px !important;
+  gap: 12px;
+}
+
+::ng-deep .mat-mdc-dialog-title {
+  padding: 24px 24px 0 24px !important;
+  margin: 0 !important;
+}
+
+::ng-deep .mat-mdc-dialog-content {
+  padding: 20px 24px !important;
+}

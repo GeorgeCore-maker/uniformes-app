@@ -257,8 +257,12 @@ export class ListaPedidosComponent implements OnInit {
         if (pedido?.id) {
           // Para edición, el resultado ya incluye las propiedades originales del pedido
           this.pedidoService.actualizar(pedido.id, resultado).subscribe({
-            next: () => {
+            next: (pedidoActualizado) => {
               this.notificationService.success('Pedido actualizado correctamente');
+
+              // Sincronizar items de producción después de la edición
+              this.sincronizarItemsProduccion(pedidoActualizado);
+
               this.cargarPedidos();
             },
             error: (error) => {
@@ -313,6 +317,192 @@ export class ListaPedidosComponent implements OnInit {
         }
       });
     }
+  }
+
+  /**
+   * Sincroniza los items de producción con los detalles actuales del pedido
+   * Crea items faltantes, elimina innecesarios y actualiza estados existentes
+   */
+  sincronizarItemsProduccion(pedido: Pedido): void {
+    // Primero obtener todos los items de producción existentes para este pedido
+    this.produccionService.obtenerTodos().subscribe({
+      next: (itemsProduccionExistentes) => {
+        const itemsDelPedido = itemsProduccionExistentes.filter(item => item.pedidoId === pedido.id);
+
+        // Obtener detalles que necesitan producción
+        const detallesQueNecesitanProduccion = pedido.detalles?.filter(detalle =>
+          detalle.estado === EstadoPedido.PENDIENTE || detalle.estado === EstadoPedido.EN_CONFECCION
+        ) || [];
+
+        let operacionesCompletadas = 0;
+        let totalOperaciones = 0;
+
+        // 1. Crear items que faltan
+        const productosConItemsExistentes = itemsDelPedido.map(item => item.productoId);
+        const detallesSinItems = detallesQueNecesitanProduccion.filter(detalle =>
+          !productosConItemsExistentes.includes(detalle.productoId)
+        );
+
+        if (detallesSinItems.length > 0) {
+          totalOperaciones++;
+          this.produccionService.crearItemsDesdeDetallePedido(
+            pedido.id,
+            pedido.numero,
+            detallesSinItems
+          ).subscribe({
+            next: (itemsCreados) => {
+              operacionesCompletadas++;
+              if (itemsCreados.length > 0) {
+                console.log(`${itemsCreados.length} nuevo(s) item(s) agregado(s) a producción`);
+              }
+              this.verificarCompletitudSincronizacion(operacionesCompletadas, totalOperaciones);
+            },
+            error: (error) => {
+              operacionesCompletadas++;
+              console.error('Error al crear nuevos items de producción:', error);
+              this.verificarCompletitudSincronizacion(operacionesCompletadas, totalOperaciones);
+            }
+          });
+        }
+
+        // 2. Actualizar estados de items existentes que necesitan cambio
+        detallesQueNecesitanProduccion.forEach(detalle => {
+          const itemExistente = itemsDelPedido.find(item => item.productoId === detalle.productoId);
+
+          // Si existe un item de producción y su estado no coincide con el del detalle del pedido
+          if (itemExistente && itemExistente.estado !== detalle.estado) {
+            totalOperaciones++;
+            this.produccionService.cambiarEstado(itemExistente.id!, detalle.estado).subscribe({
+              next: () => {
+                operacionesCompletadas++;
+                console.log(`Item de producción ${itemExistente.id} actualizado de ${itemExistente.estado} a ${detalle.estado}`);
+                this.verificarCompletitudSincronizacion(operacionesCompletadas, totalOperaciones);
+              },
+              error: (error) => {
+                operacionesCompletadas++;
+                console.error('Error al actualizar estado de item de producción:', error);
+                this.verificarCompletitudSincronizacion(operacionesCompletadas, totalOperaciones);
+              }
+            });
+          }
+        });
+
+        // 3. Eliminar items que ya no son necesarios (productos que cambiaron a TERMINADO)
+        const productosQueNecesitanProduccion = detallesQueNecesitanProduccion.map(d => d.productoId);
+        const itemsParaEliminar = itemsDelPedido.filter(item =>
+          !productosQueNecesitanProduccion.includes(item.productoId)
+        );
+
+        itemsParaEliminar.forEach(item => {
+          totalOperaciones++;
+          this.produccionService.eliminar(item.id!).subscribe({
+            next: () => {
+              operacionesCompletadas++;
+              console.log(`Item de producción ${item.id} eliminado (producto ya terminado)`);
+              this.verificarCompletitudSincronizacion(operacionesCompletadas, totalOperaciones);
+            },
+            error: (error) => {
+              operacionesCompletadas++;
+              console.error('Error al eliminar item de producción:', error);
+              this.verificarCompletitudSincronizacion(operacionesCompletadas, totalOperaciones);
+            }
+          });
+        });
+
+        // Si no hay operaciones que hacer, mostrar mensaje
+        if (totalOperaciones === 0) {
+          this.notificationService.success('Los items de producción ya están sincronizados');
+        }
+      },
+      error: (error) => {
+        console.error('Error al obtener items de producción existentes:', error);
+        // En caso de error, crear items nuevos como fallback
+        this.crearItemsProduccion(pedido);
+      }
+    });
+  }
+
+  /**
+   * Verifica si todas las operaciones de sincronización se han completado
+   */
+  private verificarCompletitudSincronizacion(completadas: number, total: number): void {
+    if (completadas === total) {
+      this.notificationService.success(
+        `Sincronización completada: ${total} operación(es) realizada(s)`
+      );
+    }
+  }
+
+  /**
+   * Sincroniza la producción para todos los pedidos
+   */
+  sincronizarTodasLasProduccion(): void {
+    this.dialogoService.confirmarAccion(
+      'Sincronizar Producción',
+      '¿Está seguro de que desea sincronizar todos los items de producción? Esta acción puede tomar unos momentos.',
+      'Sincronizar'
+    ).subscribe((confirmado) => {
+      if (confirmado) {
+        this.notificationService.success('Iniciando sincronización de producción...');
+
+        let pedidosProcesados = 0;
+        let totalItemsCreados = 0;
+
+        this.pedidos.forEach((pedido, index) => {
+          setTimeout(() => {
+            this.produccionService.obtenerTodos().subscribe({
+              next: (itemsProduccionExistentes) => {
+                const itemsDelPedido = itemsProduccionExistentes.filter(item => item.pedidoId === pedido.id);
+
+                const detallesQueNecesitanProduccion = pedido.detalles?.filter(detalle =>
+                  detalle.estado === EstadoPedido.PENDIENTE || detalle.estado === EstadoPedido.EN_CONFECCION
+                ) || [];
+
+                const productosConItemsExistentes = itemsDelPedido.map(item => item.productoId);
+                const detallesSinItems = detallesQueNecesitanProduccion.filter(detalle =>
+                  !productosConItemsExistentes.includes(detalle.productoId)
+                );
+
+                if (detallesSinItems.length > 0) {
+                  this.produccionService.crearItemsDesdeDetallePedido(
+                    pedido.id,
+                    pedido.numero,
+                    detallesSinItems
+                  ).subscribe({
+                    next: (itemsCreados) => {
+                      totalItemsCreados += itemsCreados.length;
+                      pedidosProcesados++;
+
+                      if (pedidosProcesados === this.pedidos.length) {
+                        this.notificationService.success(
+                          `Sincronización completada: ${totalItemsCreados} item(s) agregado(s) a producción`
+                        );
+                      }
+                    },
+                    error: (error) => {
+                      console.error(`Error al sincronizar pedido ${pedido.numero}:`, error);
+                      pedidosProcesados++;
+                    }
+                  });
+                } else {
+                  pedidosProcesados++;
+
+                  if (pedidosProcesados === this.pedidos.length) {
+                    this.notificationService.success(
+                      `Sincronización completada: ${totalItemsCreados} item(s) agregado(s) a producción`
+                    );
+                  }
+                }
+              },
+              error: (error) => {
+                console.error(`Error al obtener items existentes para pedido ${pedido.numero}:`, error);
+                pedidosProcesados++;
+              }
+            });
+          }, index * 100); // Pequeño delay entre requests para evitar sobrecarga
+        });
+      }
+    });
   }
 
   cambiarEstado(pedido: Pedido, nuevoEstado: EstadoPedido) {

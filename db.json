@@ -130,7 +130,7 @@
       "talla": "S",
       "precio": 85000,
       "costo": 45000,
-      "stock": 50,
+      "stock": 5,
       "stockMinimo": 10,
       "requiereConfeccion": true,
       "habilitado": true,
@@ -144,7 +144,7 @@
       "talla": "M",
       "precio": 65000,
       "costo": 35000,
-      "stock": 30,
+      "stock": 2,
       "stockMinimo": 10,
       "requiereConfeccion": true,
       "habilitado": true,
@@ -220,7 +220,7 @@
           "cantidad": 100,
           "precioUnitario": 85000,
           "subtotal": 8500000,
-          "estado": "EN_CONFECCION"
+          "estado": "TERMINADO"
         }
       ],
       "subtotal": 8500000,
@@ -231,7 +231,7 @@
       "observaciones": "Entrega para inicio de año escolar",
       "habilitado": true,
       "fechaDeshabilitado": null,
-      "updatedAt": "2026-02-23T00:02:17.812Z"
+      "updatedAt": "2026-03-25T15:18:48.112Z"
     },
     {
       "id": 2,
@@ -276,17 +276,18 @@
           "productoId": 1,
           "cantidad": 3,
           "precioUnitario": "85000",
-          "estado": "PENDIENTE"
+          "estado": "TERMINADO"
         }
       ],
       "subtotal": 255000,
       "total": 255000,
       "margen": 0,
       "fechaCreacion": "2026-03-22",
-      "habilitado": true,
+      "habilitado": false,
       "createdAt": "2026-03-23T00:04:58.454Z",
-      "updatedAt": "2026-03-23T01:41:02.493Z",
-      "crearItemsProduccion": false
+      "updatedAt": "2026-03-25T15:27:41.204Z",
+      "crearItemsProduccion": false,
+      "fechaDeshabilitado": "2026-03-25T15:27:41.204Z"
     },
     {
       "numero": "PED-004",
@@ -297,24 +298,53 @@
           "productoId": 1,
           "cantidad": 2,
           "precioUnitario": "85000",
-          "estado": "TERMINADO"
+          "estado": "PENDIENTE"
         },
         {
           "productoId": 3,
           "cantidad": 2,
           "precioUnitario": "120000",
-          "estado": "TERMINADO"
+          "estado": "PENDIENTE"
         }
       ],
       "subtotal": 410000,
       "total": 410000,
       "margen": 0,
-      "crearItemsProduccion": true,
-      "habilitado": true,
+      "crearItemsProduccion": false,
+      "habilitado": false,
       "fechaCreacion": "2026-03-23T00:56:01.202Z",
       "createdAt": "2026-03-23T00:56:01.202Z",
-      "updatedAt": "2026-03-23T01:22:49.592Z",
-      "id": 4
+      "updatedAt": "2026-03-25T15:27:38.947Z",
+      "id": 4,
+      "fechaDeshabilitado": "2026-03-25T15:27:38.947Z"
+    },
+    {
+      "numero": "PED-005",
+      "clienteId": 5,
+      "incluirIva": false,
+      "detalles": [
+        {
+          "productoId": 6,
+          "cantidad": 2,
+          "precioUnitario": "65000",
+          "estado": "PENDIENTE"
+        },
+        {
+          "productoId": 1,
+          "cantidad": 1,
+          "precioUnitario": "85000",
+          "estado": "EN_CONFECCION"
+        }
+      ],
+      "subtotal": 215000,
+      "total": 215000,
+      "margen": 0,
+      "crearItemsProduccion": false,
+      "habilitado": true,
+      "fechaCreacion": "2026-03-25T15:28:45.678Z",
+      "createdAt": "2026-03-25T15:28:45.678Z",
+      "updatedAt": "2026-03-25T15:48:57.365Z",
+      "id": 5
     }
   ],
   "produccion": [
@@ -325,12 +355,12 @@
       "detalleId": 1,
       "productoId": 1,
       "cantidad": 100,
-      "estado": "EN_CONFECCION",
+      "estado": "TERMINADO",
       "fechaInicio": "2026-02-15T10:00:00.000Z",
       "observaciones": "Uniforme escolar para colegio Santa María - Inicio año escolar",
       "habilitado": true,
       "createdAt": "2026-02-15T10:00:00.000Z",
-      "updatedAt": "2026-03-23T01:00:38.526Z"
+      "updatedAt": "2026-03-25T15:18:47.643Z"
     },
     {
       "id": 2,
@@ -339,12 +369,12 @@
       "detalleId": 4,
       "productoId": 1,
       "cantidad": 2,
-      "estado": "PENDIENTE",
+      "estado": "TERMINADO",
       "fechaInicio": "2026-03-22T08:00:00.000Z",
       "observaciones": "Item generado automáticamente desde pedido PED-003",
       "habilitado": true,
       "createdAt": "2026-03-22T08:00:00.000Z",
-      "updatedAt": "2026-03-23T01:00:36.652Z"
+      "updatedAt": "2026-03-25T15:19:49.590Z"
     },
     {
       "pedidoId": 4,
@@ -358,6 +388,32 @@
       "createdAt": "2026-03-23T00:56:01.255Z",
       "updatedAt": "2026-03-23T01:22:49.574Z",
       "id": 3
+    },
+    {
+      "pedidoId": 5,
+      "pedidoNumero": "PED-005",
+      "productoId": 6,
+      "cantidad": 2,
+      "estado": "PENDIENTE",
+      "observaciones": "Item generado automáticamente desde pedido PED-005",
+      "habilitado": true,
+      "fechaInicio": "2026-03-25T15:28:45.722Z",
+      "createdAt": "2026-03-25T15:28:45.722Z",
+      "updatedAt": "2026-03-25T15:48:57.319Z",
+      "id": 4
+    },
+    {
+      "pedidoId": 5,
+      "pedidoNumero": "PED-005",
+      "productoId": 1,
+      "cantidad": 1,
+      "estado": "EN_CONFECCION",
+      "observaciones": "Item generado automáticamente desde pedido PED-005",
+      "habilitado": true,
+      "fechaInicio": "2026-03-25T15:29:33.428Z",
+      "createdAt": "2026-03-25T15:29:33.428Z",
+      "updatedAt": "2026-03-25T15:48:25.743Z",
+      "id": 5
     }
   ],
   "roles": [

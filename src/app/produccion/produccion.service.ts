@@ -5,12 +5,16 @@ import { ItemProduccion, EstadoPedido } from '../shared/models/models';
 
 @Injectable({ providedIn: 'root' })
 export class ProduccionService {
-  private apiUrl = 'http://localhost:3000/produccion';
+  private apiUrl = 'http://localhost:3001/api/produccion';
 
   constructor(private http: HttpClient) {}
 
   obtenerTodos(): Observable<ItemProduccion[]> {
-    return this.http.get<ItemProduccion[]>(`${this.apiUrl}?habilitado=true`);
+    return this.http.get<ItemProduccion[]>(`${this.apiUrl}`);
+  }
+
+  obtenerPendientes(): Observable<ItemProduccion[]> {
+    return this.http.get<ItemProduccion[]>(`${this.apiUrl}/pendientes`);
   }
 
   obtenerPorId(id: number): Observable<ItemProduccion> {
@@ -77,7 +81,7 @@ export class ProduccionService {
 
   private actualizarEstadoEnPedido(pedidoId: number, productoId: number, nuevoEstado: EstadoPedido): Observable<any> {
     // Primero obtener el pedido completo
-    return this.http.get<any>(`http://localhost:3000/pedidos/${pedidoId}`).pipe(
+    return this.http.get<any>(`http://localhost:3001/api/pedidos/${pedidoId}`).pipe(
       switchMap(pedido => {
         // Buscar y actualizar el detalle que coincida con el productoId
         const detallesActualizados = pedido.detalles.map((detalle: any) => {
@@ -94,7 +98,7 @@ export class ProduccionService {
           updatedAt: new Date().toISOString()
         };
 
-        return this.http.put(`http://localhost:3000/pedidos/${pedidoId}`, pedidoActualizado);
+        return this.http.put(`http://localhost:3001/api/pedidos/${pedidoId}`, pedidoActualizado);
       })
     );
   }

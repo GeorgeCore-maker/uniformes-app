@@ -52,20 +52,60 @@ export class DashboardComponent implements OnInit {
       pedidos: this.pedidoService.obtenerTodos()
     }).subscribe({
       next: (datos) => {
-        // Contar totales (solo habilitados)
-        this.totalClientes = datos.clientes.filter(cliente => cliente.habilitado).length;
-        this.totalProductos = datos.productos.filter(producto => producto.habilitado).length;
-        this.totalPedidos = datos.pedidos.filter(pedido => pedido.habilitado).length;
+        console.log('Datos recibidos:', datos); // Debug log
 
-        // Calcular pedidos pendientes (que tienen al menos un detalle PENDIENTE o EN_CONFECCION)
-        this.pedidosPendientes = datos.pedidos.filter(pedido => {
-          if (!pedido.habilitado || !pedido.detalles) return false;
-
-          return pedido.detalles.some(detalle =>
-            detalle.estado === EstadoPedido.PENDIENTE ||
-            detalle.estado === EstadoPedido.EN_CONFECCION
-          );
+        // Contar totales - ser más permisivo con el filtrado
+        this.totalClientes = datos.clientes.filter(cliente => {
+          // Mostrar clientes que no estén explícitamente deshabilitados
+          return cliente.habilitado !== false;
         }).length;
+
+        this.totalProductos = datos.productos.filter(producto => {
+          // Mostrar productos que no estén explícitamente deshabilitados
+          return (producto as any).habilitado !== false && (producto as any).activo !== false;
+        }).length;
+
+        this.totalPedidos = datos.pedidos.filter(pedido => {
+          // Mostrar pedidos que no estén explícitamente deshabilitados
+          return (pedido as any).habilitado !== false;
+        }).length;
+
+        // Calcular pedidos pendientes
+        this.pedidosPendientes = datos.pedidos.filter(pedido => {
+          // Verificar que el pedido esté habilitado
+          if ((pedido as any).habilitado === false) return false;
+
+          // Verificar el estado del pedido
+          const estado = (pedido as any).estado;
+          if (estado === 'PENDIENTE' || estado === 'EN_CONFECCION') {
+            return true;
+          }
+
+          // Si tiene detalles, verificar si alguno está pendiente o en confección
+          if (pedido.detalles && pedido.detalles.length > 0) {
+            return pedido.detalles.some(detalle => {
+              const estadoDetalle = (detalle as any).estado;
+              return estadoDetalle === 'PENDIENTE' || estadoDetalle === 'EN_CONFECCION';
+            });
+          }
+
+          return false;
+        }).length;
+
+        console.log('Estadísticas calculadas:', {
+          clientes: this.totalClientes,
+          productos: this.totalProductos,
+          pedidos: this.totalPedidos,
+          pendientes: this.pedidosPendientes
+        });
+
+        // Log detallado de clientes para debug
+        console.log('Detalle de clientes:', datos.clientes.map(c => ({
+          id: c.id,
+          nombre: c.nombre,
+          habilitado: c.habilitado,
+          incluido: c.habilitado !== false
+        })));
 
         this.cargandoDatos = false;
       },

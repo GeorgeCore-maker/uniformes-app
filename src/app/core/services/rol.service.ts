@@ -5,8 +5,8 @@ import { Rol, Usuario } from '../../shared/models/models';
 
 @Injectable({ providedIn: 'root' })
 export class RolService {
-  private apiUrl = 'http://localhost:3000/roles';
-  private usersUrl = 'http://localhost:3000/users';
+  private apiUrl = 'http://localhost:3001/api/roles';
+  private usersUrl = 'http://localhost:3001/api/users';
 
   constructor(private http: HttpClient) {}
 

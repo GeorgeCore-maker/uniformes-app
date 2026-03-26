@@ -6,7 +6,7 @@ import { Usuario, UserRole } from '../shared/models/models';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private apiUrl = 'http://localhost:3000/users';
+  private apiUrl = 'http://localhost:3001/api/users';
   private isAuthenticatedSubject = new BehaviorSubject<boolean>(this.checkAuthentication());
   public isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
   private userStatusCheckInterval: any;
