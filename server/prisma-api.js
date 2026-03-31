@@ -300,9 +300,6 @@ app.get('/api/productos', async (req, res) => {
   try {
     const productos = await prisma.producto.findMany({
       where: { habilitado: true }, // Solo productos habilitados
-      include: {
-        categoriaRef: true
-      },
       orderBy: { id: 'asc' }
     });
     res.json(productos);
@@ -356,15 +353,22 @@ app.delete('/api/productos/:id', async (req, res) => {
 // === PEDIDOS ===
 app.get('/api/pedidos', async (req, res) => {
   try {
+    const incluirDeshabilitados = req.query.incluirDeshabilitados === 'true';
+
+    const where = incluirDeshabilitados ? {} : { habilitado: true };
+
     const pedidos = await prisma.pedido.findMany({
-      where: { habilitado: true }, // Solo pedidos habilitados
+      where,
       include: {
         cliente: true,
-        creador: true,
         detalles: {
-          where: { habilitado: true }, // Solo detalles habilitados
           include: {
-            producto: true
+            producto: true,
+            itemsProduccion: {
+              include: {
+                producto: true
+              }
+            }
           }
         }
       },
@@ -382,10 +386,14 @@ app.get('/api/pedidos/:id', async (req, res) => {
       where: { id: parseInt(req.params.id) },
       include: {
         cliente: true,
-        creador: true,
         detalles: {
           include: {
-            producto: true
+            producto: true,
+            itemsProduccion: {
+              include: {
+                producto: true
+              }
+            }
           }
         }
       }
@@ -401,41 +409,133 @@ app.get('/api/pedidos/:id', async (req, res) => {
 
 app.post('/api/pedidos', async (req, res) => {
   try {
+    // Filtrar solo los campos permitidos para creación
+    const allowedFields = [
+      'clienteId',
+      'numero',
+      // 'estado' removido - se maneja solo en DetallePedido
+      'incluirIva',
+      'subtotal',
+      'impuesto',
+      'total',
+      'margen',
+      'fechaCreacion',
+      'observaciones',
+      'crearItemsProduccion',
+      'detalles'
+    ];
+
+    const filteredData = {};
+    allowedFields.forEach(field => {
+      if (req.body[field] !== undefined) {
+        filteredData[field] = req.body[field];
+      }
+    });
+
+    // Manejar detalles por separado para la sintaxis de Prisma
+    const { detalles, ...pedidoData } = filteredData;
+
+    const createData = ensureHabilitado(pedidoData);
+
+    // Si hay detalles, añadirlos usando la sintaxis de Prisma
+    if (detalles && detalles.length > 0) {
+      // Convertir precioUnitario a string para que coincida con el schema
+      const detallesConvertidos = detalles.map(detalle => ({
+        ...detalle,
+        precioUnitario: detalle.precioUnitario.toString()
+      }));
+
+      createData.detalles = {
+        create: detallesConvertidos
+      };
+    }
+
     const pedido = await prisma.pedido.create({
-      data: ensureHabilitado(req.body),
+      data: createData,
       include: {
         cliente: true,
-        creador: true,
-        detalles: {
-          include: {
-            producto: true
-          }
-        }
+        detalles: true
       }
     });
     res.json(pedido);
   } catch (error) {
+    console.error('Error en POST /api/pedidos:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
 app.put('/api/pedidos/:id', async (req, res) => {
   try {
-    const pedido = await prisma.pedido.update({
-      where: { id: parseInt(req.params.id) },
-      data: req.body,
-      include: {
-        cliente: true,
-        creador: true,
-        detalles: {
-          include: {
-            producto: true
-          }
-        }
+    // Filtrar solo los campos permitidos para actualización
+    const allowedFields = [
+      'clienteId',
+      'numero',
+      // 'estado' removido - se maneja solo en DetallePedido
+      'incluirIva',
+      'subtotal',
+      'impuesto',
+      'total',
+      'margen',
+      'fechaCreacion',
+      'observaciones',
+      'habilitado',
+      'fechaDeshabilitado',
+      'crearItemsProduccion',
+      'detalles'
+    ];
+
+    const filteredData = {};
+    allowedFields.forEach(field => {
+      if (req.body[field] !== undefined) {
+        filteredData[field] = req.body[field];
       }
     });
+
+    // Manejar detalles por separado
+    const { detalles, ...pedidoData } = filteredData;
+
+    let pedido;
+
+    if (detalles && detalles.length > 0) {
+      // Si hay detalles, primero eliminar los existentes y crear los nuevos
+      await prisma.detallePedido.deleteMany({
+        where: { pedidoId: parseInt(req.params.id) }
+      });
+
+      // Convertir precioUnitario a string para que coincida con el schema
+      const detallesConvertidos = detalles.map(detalle => ({
+        ...detalle,
+        precioUnitario: detalle.precioUnitario.toString()
+      }));
+
+      pedido = await prisma.pedido.update({
+        where: { id: parseInt(req.params.id) },
+        data: {
+          ...pedidoData,
+          detalles: {
+            create: detallesConvertidos
+          }
+        },
+        include: {
+          cliente: true,
+          detalles: true
+        }
+      });
+    } else {
+      // Si no hay detalles, solo actualizar el pedido
+      pedido = await prisma.pedido.update({
+        where: { id: parseInt(req.params.id) },
+        data: pedidoData,
+        include: {
+          cliente: true,
+          detalles: true
+        }
+      });
+    }
+
     res.json(pedido);
   } catch (error) {
+    console.error('Error en PUT /api/pedidos:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -445,32 +545,92 @@ app.delete('/api/pedidos/:id', async (req, res) => {
     // Soft delete: cambiar habilitado a false
     const pedido = await prisma.pedido.update({
       where: { id: parseInt(req.params.id) },
-      data: { habilitado: false }
+      data: {
+        habilitado: false,
+        fechaDeshabilitado: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
     });
     res.json({ message: 'Pedido deshabilitado', pedido });
+  } catch (error) {
+    console.error('Error en DELETE pedido:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.patch('/api/pedidos/:id', async (req, res) => {
+  try {
+    // Para eliminación soft delete o actualizaciones parciales
+    const pedido = await prisma.pedido.update({
+      where: { id: parseInt(req.params.id) },
+      data: {
+        ...req.body,
+        updatedAt: new Date().toISOString()
+      },
+      include: {
+        cliente: true,
+        detalles: true
+      }
+    });
+    res.json(pedido);
+  } catch (error) {
+    console.error('Error en PATCH pedido:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// === DETALLES DE PEDIDO ===
+app.get('/api/pedidos/:pedidoId/detalles', async (req, res) => {
+  try {
+    const detalles = await prisma.detallePedido.findMany({
+      where: { pedidoId: parseInt(req.params.pedidoId) }
+    });
+    res.json(detalles);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// === INVENTARIO ===
+app.put('/api/pedidos/:pedidoId/detalles/:detalleId', async (req, res) => {
+  try {
+    // Filtrar solo los campos permitidos para detalles de pedido
+    const allowedFields = ['productoId', 'cantidad', 'precioUnitario', 'subtotal', 'estado'];
+    const filteredData = {};
+
+    allowedFields.forEach(field => {
+      if (req.body[field] !== undefined) {
+        filteredData[field] = req.body[field];
+      }
+    });
+
+    const detalle = await prisma.detallePedido.update({
+      where: {
+        id: parseInt(req.params.detalleId),
+        pedidoId: parseInt(req.params.pedidoId)
+      },
+      data: filteredData
+    });
+
+    res.json(detalle);
+  } catch (error) {
+    console.error(`Error en PUT /api/pedidos/${req.params.pedidoId}/detalles/${req.params.detalleId}:`, error);
+    res.status(500).json({ error: error.message });
+  }
+});// === INVENTARIO ===
 app.get('/api/inventario', async (req, res) => {
   try {
     const productos = await prisma.producto.findMany({
-      include: {
-        categoriaRef: true
-      },
       where: {
-        habilitado: true // Usar habilitado en lugar de activo
+        habilitado: true // Solo productos habilitados
       },
       orderBy: { nombre: 'asc' }
     });
 
     const inventario = productos.map(producto => {
       let estado = 'NORMAL';
-      if (producto.stockActual <= 0) {
+      if (producto.stock <= 0) {
         estado = 'CRÍTICO';
-      } else if (producto.stockActual <= producto.stockMinimo) {
+      } else if (producto.stock <= producto.stockMinimo) {
         estado = 'BAJO';
       }
 
@@ -490,10 +650,10 @@ app.get('/api/inventario', async (req, res) => {
 app.get('/api/produccion', async (req, res) => {
   try {
     const items = await prisma.itemProduccion.findMany({
-      where: { habilitado: true }, // Solo items habilitados
+      where: { habilitado: true },
       include: {
         producto: true,
-        detallePedido: {
+        detalle: {
           include: {
             pedido: {
               include: {
@@ -505,8 +665,40 @@ app.get('/api/produccion', async (req, res) => {
       },
       orderBy: { createdAt: 'desc' }
     });
+
+    console.log(`Found ${items.length} items de producción`);
     res.json(items);
   } catch (error) {
+    console.error('Error en GET /api/produccion:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/produccion/:id', async (req, res) => {
+  try {
+    const item = await prisma.itemProduccion.findUnique({
+      where: { id: parseInt(req.params.id) },
+      include: {
+        producto: true,
+        detalle: {
+          include: {
+            pedido: {
+              include: {
+                cliente: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    if (!item) {
+      return res.status(404).json({ error: 'Item de producción no encontrado' });
+    }
+
+    res.json(item);
+  } catch (error) {
+    console.error('Error en GET /api/produccion/:id:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -518,7 +710,6 @@ app.get('/api/produccion/pendientes', async (req, res) => {
     const pedidosPendientes = await prisma.pedido.findMany({
       include: {
         cliente: true,
-        creador: true,
         detalles: {
           include: {
             producto: true
@@ -576,11 +767,32 @@ app.get('/api/produccion/pendientes', async (req, res) => {
 
 app.post('/api/produccion', async (req, res) => {
   try {
+    // Filtrar solo los campos permitidos para ItemProduccion (sin estado)
+    const allowedFields = [
+      // 'pedidoId' removido - ahora se relaciona por detalle
+      // 'pedidoNumero' removido - ahora se relaciona por detalle
+      'detalleId',
+      'productoId',
+      'cantidad',
+      // 'estado' removido - se maneja solo en DetallePedido
+      'fechaInicio',
+      'fechaFin',
+      'observaciones',
+      'habilitado'
+    ];
+
+    const filteredData = { habilitado: true }; // Default habilitado
+    allowedFields.forEach(field => {
+      if (req.body[field] !== undefined) {
+        filteredData[field] = req.body[field];
+      }
+    });
+
     const item = await prisma.itemProduccion.create({
-      data: ensureHabilitado(req.body),
+      data: filteredData,
       include: {
         producto: true,
-        detallePedido: {
+        detalle: {
           include: {
             pedido: {
               include: {
@@ -593,18 +805,41 @@ app.post('/api/produccion', async (req, res) => {
     });
     res.json(item);
   } catch (error) {
+    console.error('Error en POST /api/produccion:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
 app.put('/api/produccion/:id', async (req, res) => {
   try {
+    // Filtrar solo los campos permitidos para actualización (sin estado)
+    const allowedFields = [
+      // 'pedidoId' removido - ahora se relaciona por detalle
+      // 'pedidoNumero' removido - ahora se relaciona por detalle
+      'detalleId',
+      'productoId',
+      'cantidad',
+      // 'estado' removido - se maneja solo en DetallePedido
+      'fechaInicio',
+      'fechaFin',
+      'observaciones',
+      'habilitado',
+      'updatedAt'
+    ];
+
+    const filteredData = {};
+    allowedFields.forEach(field => {
+      if (req.body[field] !== undefined) {
+        filteredData[field] = req.body[field];
+      }
+    });
+
     const item = await prisma.itemProduccion.update({
       where: { id: parseInt(req.params.id) },
-      data: req.body,
+      data: filteredData,
       include: {
         producto: true,
-        detallePedido: {
+        detalle: {
           include: {
             pedido: {
               include: {
@@ -615,8 +850,10 @@ app.put('/api/produccion/:id', async (req, res) => {
         }
       }
     });
+
     res.json(item);
   } catch (error) {
+    console.error('Error en PUT /api/produccion:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -630,6 +867,28 @@ app.delete('/api/produccion/:id', async (req, res) => {
     });
     res.json({ message: 'Item de producción deshabilitado', item });
   } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.patch('/api/produccion/:id', async (req, res) => {
+  try {
+    // Permitir actualizaciones parciales (como soft delete desde Angular)
+    const item = await prisma.itemProduccion.update({
+      where: { id: parseInt(req.params.id) },
+      data: req.body,
+      include: {
+        producto: true,
+        pedido: {
+          include: {
+            cliente: true
+          }
+        }
+      }
+    });
+    res.json(item);
+  } catch (error) {
+    console.error('Error en PATCH /api/produccion:', error);
     res.status(500).json({ error: error.message });
   }
 });

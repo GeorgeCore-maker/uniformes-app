@@ -32,6 +32,9 @@
     "docker:logs": "docker-compose logs -f",
     "docker:build": "docker-compose build"
   },
+  "prisma": {
+    "seed": "node ./prisma/seed.js"
+  },
   "private": true,
   "dependencies": {
     "@angular/animations": "^18.2.14",

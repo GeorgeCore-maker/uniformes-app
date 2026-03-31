@@ -76,6 +76,8 @@ export interface Producto {
 
 export interface DetallePedido {
   id: number;
+  pedidoId: number;
+  pedido?: Pedido; // Relación con pedido
   productoId: number;
   producto?: Producto;
   cantidad: number;
@@ -86,13 +88,14 @@ export interface DetallePedido {
 
 export interface ItemProduccion {
   id?: number;
-  pedidoId: number;
-  pedidoNumero: string;
+  // pedidoId removido - ahora se relaciona a través de detalle
+  // pedidoNumero removido - ahora se obtiene a través de detalle.pedido
   detalleId: number;
+  detalle?: DetallePedido; // Nueva relación principal
   productoId: number;
   producto?: Producto;
   cantidad: number;
-  estado: EstadoPedido;
+  // estado removido - se lee desde DetallePedido asociado
   fechaInicio?: Date;
   fechaEstimadaFinalizacion?: Date;
   observaciones?: string;
@@ -106,7 +109,6 @@ export interface Pedido {
   clienteId: number;
   cliente?: Cliente;
   numero: string;
-  estado: EstadoPedido;
   incluirIva: boolean;  // Control para aplicar o no el IVA
   detalles: DetallePedido[];
   subtotal: number;

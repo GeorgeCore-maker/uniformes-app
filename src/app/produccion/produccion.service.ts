@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, forkJoin, switchMap } from 'rxjs';
+import { Observable, forkJoin, switchMap, catchError, throwError } from 'rxjs';
 import { ItemProduccion, EstadoPedido } from '../shared/models/models';
 
 @Injectable({ providedIn: 'root' })
@@ -54,51 +54,80 @@ export class ProduccionService {
   }
 
   cambiarEstado(id: number, nuevoEstado: EstadoPedido): Observable<ItemProduccion> {
-    // Primero obtener el item de producción para conocer el pedido y producto asociado
+    // Obtener el item de producción para conocer el detalle asociado
     return this.obtenerPorId(id).pipe(
       switchMap(item => {
-        // Actualizar el estado del item de producción
-        const actualizarProduccion = this.http.patch<ItemProduccion>(`${this.apiUrl}/${id}`, {
-          estado: nuevoEstado,
-          updatedAt: new Date().toISOString()
-        });
-
-        // Actualizar el estado en el pedido correspondiente
-        const actualizarPedido = this.actualizarEstadoEnPedido(item.pedidoId, item.productoId, nuevoEstado);
-
-        // Ejecutar ambas actualizaciones y retornar solo la del item de producción
-        return forkJoin([actualizarProduccion, actualizarPedido]).pipe(
-          switchMap(([itemActualizado, pedidoActualizado]) => {
-            return new Observable<ItemProduccion>(observer => {
-              observer.next(itemActualizado);
-              observer.complete();
-            });
-          })
-        );
+        // Solo actualizar el estado en el DetallePedido, NO en ItemProduccion
+        if (item.detalleId && item.detalle?.pedido?.id) {
+          return this.http.put(
+            `http://localhost:3001/api/pedidos/${item.detalle.pedido.id}/detalles/${item.detalleId}`,
+            { estado: nuevoEstado }
+          ).pipe(
+            switchMap(() => {
+              // Retornar el item de producción actualizado (sin estado propio)
+              return new Observable<ItemProduccion>(observer => {
+                // El item mantiene sus datos originales, el estado se lee desde el detalle
+                observer.next(item);
+                observer.complete();
+              });
+            }),
+            // Si falla la actualización del detalle, intentar sincronizar IDs
+            catchError((error: any) => {
+              console.warn('Error actualizando detalle, intentando sincronizar IDs:', error);
+              return this.sincronizarDetalleItem(item, nuevoEstado).pipe(
+                switchMap(() => {
+                  return new Observable<ItemProduccion>(observer => {
+                    observer.next(item);
+                    observer.complete();
+                  });
+                }),
+                catchError(() => {
+                  // Si también falla la sincronización, retornar error
+                  console.error('No se pudo sincronizar ni actualizar el estado');
+                  return throwError(() => new Error('Error al cambiar estado del item'));
+                })
+              );
+            })
+          );
+        } else {
+          // Si no hay detalleId, no se puede cambiar estado
+          console.warn('Item de producción sin detalleId asociado');
+          return throwError(() => new Error('Item sin detalle asociado'));
+        }
       })
     );
   }
 
-  private actualizarEstadoEnPedido(pedidoId: number, productoId: number, nuevoEstado: EstadoPedido): Observable<any> {
-    // Primero obtener el pedido completo
-    return this.http.get<any>(`http://localhost:3001/api/pedidos/${pedidoId}`).pipe(
+  private sincronizarDetalleItem(item: ItemProduccion, nuevoEstado: EstadoPedido): Observable<any> {
+    // Ya no necesitamos obtener el pedido por pedidoId, usamos la relación detalle
+    if (!item.detalle?.pedido?.id) {
+      throw new Error(`No se puede sincronizar: item sin detalle o pedido asociado`);
+    }
+
+    // Obtener el pedido completo para encontrar el detalle correcto por productoId
+    return this.http.get<any>(`http://localhost:3001/api/pedidos/${item.detalle.pedido.id}`).pipe(
       switchMap(pedido => {
-        // Buscar y actualizar el detalle que coincida con el productoId
-        const detallesActualizados = pedido.detalles.map((detalle: any) => {
-          if (detalle.productoId === productoId) {
-            return { ...detalle, estado: nuevoEstado };
-          }
-          return detalle;
+        // Buscar el detalle que coincida con el productoId
+        const detalleCorreto = pedido.detalles.find((d: any) => d.productoId === item.productoId);
+
+        if (!detalleCorreto) {
+          throw new Error(`No se encontró detalle con productoId ${item.productoId} en pedido ${item.detalle?.pedido?.id || 'desconocido'}`);
+        }
+
+        // Actualizar el item de producción con el detalleId correcto
+        const actualizarItem = this.http.put<ItemProduccion>(`${this.apiUrl}/${item.id}`, {
+          ...item,
+          detalleId: detalleCorreto.id,
+          updatedAt: new Date().toISOString()
         });
 
-        // Actualizar el pedido con los detalles modificados
-        const pedidoActualizado = {
-          ...pedido,
-          detalles: detallesActualizados,
-          updatedAt: new Date().toISOString()
-        };
+        // Actualizar el estado del detalle correcto
+        const actualizarDetalle = this.http.put(
+          `http://localhost:3001/api/pedidos/${item.detalle?.pedido?.id}/detalles/${detalleCorreto.id}`,
+          { estado: nuevoEstado }
+        );
 
-        return this.http.put(`http://localhost:3001/api/pedidos/${pedidoId}`, pedidoActualizado);
+        return forkJoin([actualizarItem, actualizarDetalle]);
       })
     );
   }

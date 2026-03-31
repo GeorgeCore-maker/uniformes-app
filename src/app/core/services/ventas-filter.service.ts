@@ -77,6 +77,45 @@ export class VentasFilterService {
   }
 
   /**
+   * Obtener el estado de un pedido basado en los estados de sus detalles
+   */
+  obtenerEstadoPedido(pedido: Pedido): string {
+    if (!pedido.detalles || pedido.detalles.length === 0) {
+      return 'PENDIENTE';
+    }
+
+    const estados = pedido.detalles.map(detalle => detalle.estado);
+
+    // Si todos los detalles están entregados
+    if (estados.every(estado => estado === 'ENTREGADO')) {
+      return 'ENTREGADO';
+    }
+
+    // Si todos los detalles están terminados o entregados
+    if (estados.every(estado => estado === 'TERMINADO' || estado === 'ENTREGADO')) {
+      return 'TERMINADO';
+    }
+
+    // Si hay al menos un detalle en confección
+    if (estados.some(estado => estado === 'EN_CONFECCION')) {
+      return 'EN_CONFECCION';
+    }
+
+    // Si hay al menos un detalle enviado
+    if (estados.some(estado => estado === 'ENVIADO')) {
+      return 'ENVIADO';
+    }
+
+    // Si todos están cancelados
+    if (estados.every(estado => estado === 'CANCELADO')) {
+      return 'CANCELADO';
+    }
+
+    // Por defecto, pendiente
+    return 'PENDIENTE';
+  }
+
+  /**
    * Filtrar pedidos por rango de fechas y estado
    */
   filtrarPorRangoFechasYEstado(
@@ -85,7 +124,7 @@ export class VentasFilterService {
     rangoFechas?: RangoFechas
   ): Pedido[] {
     const filtrados = this.filtrarPorRangoFechas(pedidos, rangoFechas);
-    return filtrados.filter((pedido: Pedido) => pedido.estado === estado);
+    return filtrados.filter((pedido: Pedido) => this.obtenerEstadoPedido(pedido) === estado);
   }
 
   /**
@@ -112,7 +151,8 @@ export class VentasFilterService {
 
     const estadosPedidos: { [key: string]: number } = {};
     filtrados.forEach((pedido: Pedido) => {
-      estadosPedidos[pedido.estado] = (estadosPedidos[pedido.estado] || 0) + 1;
+      const estado = this.obtenerEstadoPedido(pedido);
+      estadosPedidos[estado] = (estadosPedidos[estado] || 0) + 1;
     });
 
     return {

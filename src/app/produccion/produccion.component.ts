@@ -66,16 +66,27 @@ export class ProduccionComponent implements OnInit {
 
   private cargarItemsProduccion() {
     this.produccionService.obtenerTodos().subscribe(items => {
-      // Filtrar solo los items que están PENDIENTE o EN_CONFECCION
-      this.items = items.filter(item =>
-        item.estado === EstadoPedido.PENDIENTE ||
-        item.estado === EstadoPedido.EN_CONFECCION
-      );
+      // Filtrar items que deben aparecer en producción
+      this.items = items.filter(item => {
+        // 1. El pedido debe estar habilitado (a través del detalle)
+        if (!item.detalle?.pedido?.habilitado) {
+          return false;
+        }
+
+        // 2. El producto debe requerir confección
+        if (!item.producto?.requiereConfeccion) {
+          return false;
+        }
+
+        // 3. El estado del detalle debe ser PENDIENTE o EN_CONFECCION
+        const estadoDetalle = item.detalle?.estado;
+
+        return estadoDetalle === EstadoPedido.PENDIENTE ||
+               estadoDetalle === EstadoPedido.EN_CONFECCION;
+      });
       this.actualizarFiltro();
     });
-  }
-
-  recargarDatos() {
+  }  recargarDatos() {
     this.cargarItemsProduccion();
   }
 
@@ -83,14 +94,21 @@ export class ProduccionComponent implements OnInit {
     if (this.filtroEstado === 'TODOS') {
       this.itemsFiltrados = [...this.items];
     } else {
-      this.itemsFiltrados = this.items.filter(item => item.estado === this.filtroEstado);
+      this.itemsFiltrados = this.items.filter(item => this.obtenerEstadoItem(item) === this.filtroEstado);
     }
+  }
+
+  // Función helper para obtener el estado desde el detalle asociado
+  obtenerEstadoItem(item: ItemProduccion): EstadoPedido {
+    // Ahora el estado se obtiene directamente del detalle asociado
+    return item.detalle?.estado || EstadoPedido.PENDIENTE;
   }
 
   cambiarEstado(item: ItemProduccion) {
     if (!item.id) return;
 
-    const nuevoEstado = item.estado === EstadoPedido.PENDIENTE
+    const estadoActual = this.obtenerEstadoItem(item);
+    const nuevoEstado = estadoActual === EstadoPedido.PENDIENTE
       ? EstadoPedido.EN_CONFECCION
       : EstadoPedido.TERMINADO;
 

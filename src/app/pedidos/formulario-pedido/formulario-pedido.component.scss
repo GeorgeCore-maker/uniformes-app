@@ -1,3 +1,19 @@
+// Estilos para campos de formulario
+mat-form-field {
+  width: 100%;
+  margin-bottom: 16px;
+
+  &.full-width {
+    width: 100%;
+  }
+}
+
+// Estilos específicos para el textarea de observaciones
+mat-form-field textarea {
+  min-height: 60px;
+  resize: vertical;
+}
+
 ::ng-deep .formulario-pedido-dialog {
   .mdc-dialog__surface {
     max-width: 900px;

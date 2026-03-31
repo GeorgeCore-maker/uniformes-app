@@ -56,6 +56,7 @@ export class FormularioPedidoComponent implements OnInit {
     this.formulario = this.fb.group({
       numero: [data?.numero || '', Validators.required],
       clienteId: [data?.clienteId || '', Validators.required],
+      observaciones: [data?.observaciones || ''], // Campo para observaciones del pedido
       incluirIva: [data?.incluirIva !== undefined ? data.incluirIva : true], // IVA habilitado por defecto
       detalles: this.fb.array([]),
       subtotal: [data?.subtotal || 0],

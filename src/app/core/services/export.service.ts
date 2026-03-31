@@ -44,7 +44,7 @@ export class ExportService {
     infoY += lineHeight;
     doc.text(`Fecha: ${this.formatearFecha(pedido.fechaCreacion)}`, infoX, infoY);
     infoY += lineHeight;
-    doc.text(`Estado: ${pedido.estado}`, infoX, infoY);
+    doc.text(`Estado: ${this.obtenerEstadoPedido(pedido)}`, infoX, infoY);
     infoY += lineHeight;
     doc.text(`Observaciones: ${pedido.observaciones || 'N/A'}`, infoX, infoY);
 
@@ -170,7 +170,7 @@ export class ExportService {
       datosExcel.push({
         'Número': pedido.numero,
         'Cliente ID': pedido.clienteId,
-        'Estado': pedido.estado,
+        'Estado': this.obtenerEstadoPedido(pedido),
         'Subtotal': pedido.subtotal,
         'Impuesto': pedido.impuesto || 0,
         'Total': pedido.total,
@@ -254,5 +254,44 @@ export class ExportService {
   private obtenerFechaArchivo(): string {
     const now = new Date();
     return now.toISOString().split('T')[0];
+  }
+
+  /**
+   * Obtener el estado de un pedido basado en los estados de sus detalles
+   */
+  private obtenerEstadoPedido(pedido: Pedido): string {
+    if (!pedido.detalles || pedido.detalles.length === 0) {
+      return 'PENDIENTE';
+    }
+
+    const estados = pedido.detalles.map(detalle => detalle.estado);
+
+    // Si todos los detalles están entregados
+    if (estados.every(estado => estado === 'ENTREGADO')) {
+      return 'ENTREGADO';
+    }
+
+    // Si todos los detalles están terminados o entregados
+    if (estados.every(estado => estado === 'TERMINADO' || estado === 'ENTREGADO')) {
+      return 'TERMINADO';
+    }
+
+    // Si hay al menos un detalle en confección
+    if (estados.some(estado => estado === 'EN_CONFECCION')) {
+      return 'EN_CONFECCION';
+    }
+
+    // Si hay al menos un detalle enviado
+    if (estados.some(estado => estado === 'ENVIADO')) {
+      return 'ENVIADO';
+    }
+
+    // Si todos están cancelados
+    if (estados.every(estado => estado === 'CANCELADO')) {
+      return 'CANCELADO';
+    }
+
+    // Por defecto, pendiente
+    return 'PENDIENTE';
   }
 }

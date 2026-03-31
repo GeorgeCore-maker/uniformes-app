@@ -122,7 +122,8 @@ export class ListaPedidosComponent implements OnInit {
   aplicarFiltros() {
     this.pedidosFiltrados = this.pedidos.filter((pedido) => {
       const coincideNumero = pedido.numero.toString().includes(this.filtroNumero);
-      const coincideEstado = !this.filtroEstado || pedido.estado === this.filtroEstado;
+      const estadoPedido = this.obtenerEstadoPedido(pedido);
+      const coincideEstado = !this.filtroEstado || estadoPedido === this.filtroEstado;
       return coincideNumero && coincideEstado;
     });
 
@@ -134,6 +135,45 @@ export class ListaPedidosComponent implements OnInit {
 
     this.totalItems = this.pedidosFiltrados.length;
     this.currentPage = 0;
+  }
+
+  /**
+   * Obtener el estado de un pedido basado en los estados de sus detalles
+   */
+  obtenerEstadoPedido(pedido: Pedido): string {
+    if (!pedido.detalles || pedido.detalles.length === 0) {
+      return 'PENDIENTE';
+    }
+
+    const estados = pedido.detalles.map(detalle => detalle.estado);
+
+    // Si todos los detalles están entregados
+    if (estados.every(estado => estado === EstadoPedido.ENTREGADO)) {
+      return EstadoPedido.ENTREGADO;
+    }
+
+    // Si todos los detalles están terminados o entregados
+    if (estados.every(estado => estado === EstadoPedido.TERMINADO || estado === EstadoPedido.ENTREGADO)) {
+      return EstadoPedido.TERMINADO;
+    }
+
+    // Si hay al menos un detalle en confección
+    if (estados.some(estado => estado === EstadoPedido.EN_CONFECCION)) {
+      return EstadoPedido.EN_CONFECCION;
+    }
+
+    // Si hay al menos un detalle enviado
+    if (estados.some(estado => estado === EstadoPedido.ENVIADO)) {
+      return EstadoPedido.ENVIADO;
+    }
+
+    // Si todos están cancelados
+    if (estados.every(estado => estado === EstadoPedido.CANCELADO)) {
+      return EstadoPedido.CANCELADO;
+    }
+
+    // Por defecto, pendiente
+    return EstadoPedido.PENDIENTE;
   }
 
   get pedidosPaginados(): Pedido[] {
@@ -327,7 +367,7 @@ export class ListaPedidosComponent implements OnInit {
     // Primero obtener todos los items de producción existentes para este pedido
     this.produccionService.obtenerTodos().subscribe({
       next: (itemsProduccionExistentes) => {
-        const itemsDelPedido = itemsProduccionExistentes.filter(item => item.pedidoId === pedido.id);
+        const itemsDelPedido = itemsProduccionExistentes.filter(item => item.detalle?.pedido?.id === pedido.id);
 
         // Obtener detalles que necesitan producción
         const detallesQueNecesitanProduccion = pedido.detalles?.filter(detalle =>
@@ -365,17 +405,18 @@ export class ListaPedidosComponent implements OnInit {
           });
         }
 
-        // 2. Actualizar estados de items existentes que necesitan cambio
+        // 2. Actualizar estados de detalles (ya no comparamos estados en ItemProduccion)
+        // Los items de producción ya no tienen estado propio, solo referencian el detalle
         detallesQueNecesitanProduccion.forEach(detalle => {
           const itemExistente = itemsDelPedido.find(item => item.productoId === detalle.productoId);
 
-          // Si existe un item de producción y su estado no coincide con el del detalle del pedido
-          if (itemExistente && itemExistente.estado !== detalle.estado) {
+          // Si existe un item de producción, actualizamos el estado en el detalle
+          if (itemExistente) {
             totalOperaciones++;
             this.produccionService.cambiarEstado(itemExistente.id!, detalle.estado).subscribe({
               next: () => {
                 operacionesCompletadas++;
-                console.log(`Item de producción ${itemExistente.id} actualizado de ${itemExistente.estado} a ${detalle.estado}`);
+                console.log(`Estado actualizado para item de producción ${itemExistente.id} -> ${detalle.estado}`);
                 this.verificarCompletitudSincronizacion(operacionesCompletadas, totalOperaciones);
               },
               error: (error) => {
@@ -452,7 +493,7 @@ export class ListaPedidosComponent implements OnInit {
           setTimeout(() => {
             this.produccionService.obtenerTodos().subscribe({
               next: (itemsProduccionExistentes) => {
-                const itemsDelPedido = itemsProduccionExistentes.filter(item => item.pedidoId === pedido.id);
+                const itemsDelPedido = itemsProduccionExistentes.filter(item => item.detalle?.pedido?.id === pedido.id);
 
                 const detallesQueNecesitanProduccion = pedido.detalles?.filter(detalle =>
                   detalle.estado === EstadoPedido.PENDIENTE || detalle.estado === EstadoPedido.EN_CONFECCION

@@ -24,7 +24,12 @@ export class PedidoService {
       habilitado: true,
       fechaCreacion: new Date().toISOString(),  // Asegurar consistencia con fechaCreacion
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      // Convertir precioUnitario a string en los detalles para compatibilidad con base de datos
+      detalles: pedido.detalles?.map(detalle => ({
+        ...detalle,
+        precioUnitario: detalle.precioUnitario?.toString() || '0'
+      })) || []
     };
     return this.http.post<Pedido>(this.apiUrl, nuevoPedido);
   }
@@ -37,7 +42,12 @@ export class PedidoService {
       habilitado: pedido.habilitado !== undefined ? pedido.habilitado : true,
       fechaCreacion: pedido.fechaCreacion || pedido.createdAt || new Date(),
       createdAt: pedido.createdAt || pedido.fechaCreacion || new Date(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      // Convertir precioUnitario a string en los detalles para compatibilidad con base de datos
+      detalles: pedido.detalles?.map(detalle => ({
+        ...detalle,
+        precioUnitario: detalle.precioUnitario?.toString() || '0'
+      })) || []
     };
     return this.http.put<Pedido>(`${this.apiUrl}/${id}`, pedidoActualizado);
   }
@@ -58,13 +68,13 @@ export class PedidoService {
    * Generar el siguiente número consecutivo de pedido
    */
   generarSiguienteNumero(): Observable<string> {
-    return this.http.get<Pedido[]>(this.apiUrl).pipe(
+    return this.http.get<Pedido[]>(`${this.apiUrl}?incluirDeshabilitados=true`).pipe(
       map(pedidos => {
         if (pedidos.length === 0) {
           return 'PED-001';
         }
 
-        // Extraer números de los pedidos existentes
+        // Extraer números de los pedidos existentes (incluyendo deshabilitados)
         const numeros = pedidos
           .map(p => p.numero)
           .filter(numero => numero && numero.startsWith('PED-'))
