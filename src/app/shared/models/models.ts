@@ -102,6 +102,11 @@ export interface ItemProduccion {
   habilitado: boolean;
   createdAt?: Date;
   updatedAt?: Date;
+
+  // Campos agregados por el backend para facilitar la visualización
+  numeroPedido?: string;
+  fechaPedido?: string;
+  cliente?: Cliente;
 }
 
 export interface Pedido {

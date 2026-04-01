@@ -6,6 +6,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { Producto, CategoriaProducto } from '../../shared/models/models';
 
 @Component({
@@ -19,7 +20,8 @@ import { Producto, CategoriaProducto } from '../../shared/models/models';
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
-    MatSelectModule
+    MatSelectModule,
+    MatCheckboxModule
   ],
   templateUrl: './formulario-producto.component.html',
   styleUrl: './formulario-producto.component.scss'
@@ -40,7 +42,8 @@ export class FormularioProductoComponent {
       precio: [data?.precio || '', [Validators.required, Validators.min(0)]],
       costo: [data?.costo || '', [Validators.required, Validators.min(0)]],
       stock: [data?.stock || '', [Validators.required, Validators.min(0)]],
-      stockMinimo: [data?.stockMinimo || '', [Validators.required, Validators.min(0)]]
+      stockMinimo: [data?.stockMinimo || '', [Validators.required, Validators.min(0)]],
+      requiereConfeccion: [data?.requiereConfeccion || false]
     }, { validators: this.validarCostoPrecio.bind(this) });
   }
 

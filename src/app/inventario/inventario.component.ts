@@ -157,17 +157,26 @@ export class InventarioComponent implements OnInit {
   }
 
   private actualizarRequiereConfeccion(producto: ProductoInventario, requiereConfeccion: boolean): void {
-    // Aquí iría la lógica para actualizar en el backend
-    // Por ahora solo actualizamos localmente y mostramos notificación
-    producto.requiereConfeccion = requiereConfeccion;
+    this.inventarioService.actualizarRequiereConfeccion(producto.id, requiereConfeccion).subscribe({
+      next: () => {
+        producto.requiereConfeccion = requiereConfeccion;
 
-    const mensaje = requiereConfeccion ?
-      `"${producto.nombre}" ahora requiere confección` :
-      `"${producto.nombre}" ya no requiere confección`;
+        const mensaje = requiereConfeccion ?
+          `"${producto.nombre}" ahora requiere confección` :
+          `"${producto.nombre}" ya no requiere confección`;
 
-    this.notificationService.success(mensaje);
+        this.notificationService.success(mensaje);
 
-    // TODO: Implementar actualización en el backend cuando esté disponible el endpoint
-    // this.inventarioService.actualizarRequiereConfeccion(producto.id, requiereConfeccion).subscribe(...)
+        // Recargar inventario para asegurar consistencia
+        this.cargarInventario();
+      },
+      error: (error) => {
+        console.error('Error al actualizar requiere confección:', error);
+        this.notificationService.error('Error al actualizar el estado de confección');
+
+        // Revertir el cambio local si falla el backend
+        producto.requiereConfeccion = !requiereConfeccion;
+      }
+    });
   }
 }

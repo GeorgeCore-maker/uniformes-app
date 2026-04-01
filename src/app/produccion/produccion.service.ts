@@ -1,13 +1,17 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, forkJoin, switchMap, catchError, throwError } from 'rxjs';
+import { Observable, forkJoin, switchMap, catchError, throwError, tap } from 'rxjs';
 import { ItemProduccion, EstadoPedido } from '../shared/models/models';
+import { EventosService } from '../shared/services/eventos.service';
 
 @Injectable({ providedIn: 'root' })
 export class ProduccionService {
   private apiUrl = 'http://localhost:3001/api/produccion';
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private eventosService: EventosService
+  ) {}
 
   obtenerTodos(): Observable<ItemProduccion[]> {
     return this.http.get<ItemProduccion[]>(`${this.apiUrl}`);
@@ -63,6 +67,14 @@ export class ProduccionService {
             `http://localhost:3001/api/pedidos/${item.detalle.pedido.id}/detalles/${item.detalleId}`,
             { estado: nuevoEstado }
           ).pipe(
+            tap(() => {
+              // Emitir evento de sincronización
+              this.eventosService.emitirProduccionActualizada(
+                id,
+                item.detalleId!,
+                nuevoEstado
+              );
+            }),
             switchMap(() => {
               // Retornar el item de producción actualizado (sin estado propio)
               return new Observable<ItemProduccion>(observer => {

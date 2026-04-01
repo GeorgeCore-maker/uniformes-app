@@ -14,7 +14,7 @@
     "dev:db": "npm run server",
     "dev:api": "npm run server:prisma",
     "dev:web": "ng serve --port 4200",
-    "dev": "concurrently \"npm run dev:api\" \"npm run dev:web\"",
+    "dev": "concurrently --prefix-colors \"cyan,magenta\" --names \"API,WEB\" \"npm run dev:api\" \"npm run dev:web\"",
     "migrate": "node run-migration.bat",
     "migrate:linux": "bash run-migration.sh",
     "db:migrate:phase1": "./scripts/migrate-database.sh 1",

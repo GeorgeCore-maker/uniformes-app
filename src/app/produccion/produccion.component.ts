@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
@@ -9,9 +9,11 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { FormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
 import { ProduccionService } from './produccion.service';
 import { ProductoService } from '../productos/producto.service';
 import { ClienteService } from '../clientes/cliente.service';
+import { EventosService } from '../shared/services/eventos.service';
 import { ItemProduccion, EstadoPedido, Producto, Cliente } from '../shared/models/models';
 
 @Component({
@@ -32,7 +34,7 @@ import { ItemProduccion, EstadoPedido, Producto, Cliente } from '../shared/model
   templateUrl: './produccion.component.html',
   styleUrl: './produccion.component.scss'
 })
-export class ProduccionComponent implements OnInit {
+export class ProduccionComponent implements OnInit, OnDestroy {
   items: ItemProduccion[] = [];
   itemsFiltrados: ItemProduccion[] = [];
   productos: Producto[] = [];
@@ -42,14 +44,42 @@ export class ProduccionComponent implements OnInit {
   filtroEstado = 'TODOS';
   estadosDisponibles = ['TODOS', 'PENDIENTE', 'EN_CONFECCION'];
 
+  // Subscripción para eventos de sincronización
+  private eventosSubscription?: Subscription;
+
   constructor(
     private produccionService: ProduccionService,
     private productoService: ProductoService,
-    private clienteService: ClienteService
+    private clienteService: ClienteService,
+    private eventosService: EventosService
   ) {}
 
   ngOnInit() {
     this.cargarDatos();
+    this.suscribirseAEventos();
+  }
+
+  ngOnDestroy() {
+    if (this.eventosSubscription) {
+      this.eventosSubscription.unsubscribe();
+    }
+  }
+
+  private suscribirseAEventos() {
+    // Escuchar actualizaciones de pedidos
+    this.eventosSubscription = this.eventosService.pedidoActualizado$.subscribe(() => {
+      console.log('Pedido actualizado, recargando items de producción...');
+      this.cargarItemsProduccion();
+    });
+
+    // También recargar cuando cambien los productos (para requiereConfeccion)
+    // Esto se activará cuando se actualice un producto desde inventario
+    this.eventosSubscription.add(
+      this.productoService.obtenerTodos().subscribe(() => {
+        console.log('Productos actualizados, recargando datos de producción...');
+        this.cargarDatos(); // Recargar tanto productos como items
+      })
+    );
   }
 
   private cargarDatos() {
@@ -65,29 +95,42 @@ export class ProduccionComponent implements OnInit {
   }
 
   private cargarItemsProduccion() {
-    this.produccionService.obtenerTodos().subscribe(items => {
-      // Filtrar items que deben aparecer en producción
-      this.items = items.filter(item => {
-        // 1. El pedido debe estar habilitado (a través del detalle)
-        if (!item.detalle?.pedido?.habilitado) {
-          return false;
-        }
+    this.produccionService.obtenerTodos().subscribe({
+      next: (items) => {
+        console.log('Items recibidos de producción:', items); // Debug
 
-        // 2. El producto debe requerir confección
-        if (!item.producto?.requiereConfeccion) {
-          return false;
-        }
+        // Filtrar items que deben aparecer en producción
+        this.items = items.filter(item => {
+          // 1. El item debe estar habilitado
+          if (!item.habilitado) {
+            return false;
+          }
 
-        // 3. El estado del detalle debe ser PENDIENTE o EN_CONFECCION
-        const estadoDetalle = item.detalle?.estado;
+          // 2. El producto debe requerir confección
+          if (!item.producto?.requiereConfeccion) {
+            return false;
+          }
 
-        return estadoDetalle === EstadoPedido.PENDIENTE ||
-               estadoDetalle === EstadoPedido.EN_CONFECCION;
-      });
-      this.actualizarFiltro();
+          // 3. El estado del detalle debe ser PENDIENTE o EN_CONFECCION
+          const estadoDetalle = item.detalle?.estado as string;
+
+          const esEstadoValido = estadoDetalle === EstadoPedido.PENDIENTE ||
+                 estadoDetalle === EstadoPedido.EN_CONFECCION ||
+                 estadoDetalle === 'PENDIENTE' ||
+                 estadoDetalle === 'EN_CONFECCION';
+
+          return esEstadoValido;
+        });
+
+        console.log('Items filtrados:', this.items); // Debug
+        this.actualizarFiltro();
+      },
+      error: (error) => {
+        console.error('Error cargando items de producción:', error);
+        this.items = [];
+        this.actualizarFiltro();
+      }
     });
-  }  recargarDatos() {
-    this.cargarItemsProduccion();
   }
 
   actualizarFiltro() {

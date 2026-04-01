@@ -48,8 +48,7 @@ export class InventarioService {
    */
   actualizarStock(id: number, nuevoStock: number): Observable<any> {
     return this.http.put<any>(`http://localhost:3001/api/productos/${id}`, {
-      stockActual: nuevoStock,
-      updatedAt: new Date().toISOString()
+      stock: nuevoStock
     });
   }
 
@@ -58,8 +57,7 @@ export class InventarioService {
    */
   actualizarRequiereConfeccion(id: number, requiereConfeccion: boolean): Observable<any> {
     return this.http.put<any>(`http://localhost:3001/api/productos/${id}`, {
-      requiereConfeccion: requiereConfeccion,
-      updatedAt: new Date().toISOString()
+      requiereConfeccion: requiereConfeccion
     });
   }
 
@@ -67,21 +65,18 @@ export class InventarioService {
    * Mapea un producto a la estructura de inventario con estado calculado
    */
   private mapearProductoAInventario(producto: any): ProductoInventario {
-    // La nueva API ya calcula el estado automáticamente
-    const estado = producto.estado || this.calcularEstadoStock(producto.stockActual, producto.stockMinimo);
-
     return {
       id: producto.id,
       nombre: producto.nombre,
       categoria: producto.categoria,
-      talla: producto.talla || 'N/A', // Campo no existe en nueva DB, usar N/A
-      stock: producto.stockActual, // Campo actualizado en nueva DB
+      talla: producto.talla || 'N/A',
+      stock: producto.stock,
       stockMinimo: producto.stockMinimo,
-      estado: estado,
+      estado: producto.estado,
       precio: producto.precio,
-      costo: producto.costo || 0, // Campo no existe en nueva DB, usar 0
+      costo: producto.costo || 0,
       requiereConfeccion: producto.requiereConfeccion,
-      habilitado: producto.activo // Campo actualizado en nueva DB
+      habilitado: producto.habilitado
     };
   }
 

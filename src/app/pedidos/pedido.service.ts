@@ -1,14 +1,18 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { switchMap, map } from 'rxjs/operators';
+import { switchMap, map, tap } from 'rxjs/operators';
 import { Pedido, EstadoPedido } from '../shared/models/models';
+import { EventosService } from '../shared/services/eventos.service';
 
 @Injectable({ providedIn: 'root' })
 export class PedidoService {
   private apiUrl = 'http://localhost:3001/api/pedidos';
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private eventosService: EventosService
+  ) {}
 
   obtenerTodos(): Observable<Pedido[]> {
     return this.http.get<Pedido[]>(`${this.apiUrl}?habilitado=true`);
@@ -49,7 +53,13 @@ export class PedidoService {
         precioUnitario: detalle.precioUnitario?.toString() || '0'
       })) || []
     };
-    return this.http.put<Pedido>(`${this.apiUrl}/${id}`, pedidoActualizado);
+
+    return this.http.put<Pedido>(`${this.apiUrl}/${id}`, pedidoActualizado).pipe(
+      tap((pedidoResult) => {
+        // Emitir evento de actualización de pedido
+        this.eventosService.emitirPedidoActualizado(id);
+      })
+    );
   }
 
   eliminar(id: number): Observable<Pedido> {

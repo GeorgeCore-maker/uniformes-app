@@ -310,29 +310,69 @@ app.get('/api/productos', async (req, res) => {
 
 app.post('/api/productos', async (req, res) => {
   try {
-    const producto = await prisma.producto.create({
-      data: ensureHabilitado(req.body),
-      include: {
-        categoriaRef: true
+    // Campos permitidos para el modelo Producto
+    const allowedFields = [
+      'nombre',
+      'descripcion',
+      'categoria',
+      'talla',
+      'precio',
+      'costo',
+      'stock',
+      'stockMinimo',
+      'requiereConfeccion',
+      'habilitado',
+      'fechaDeshabilitado'
+    ];
+
+    const filteredData = { habilitado: true }; // Default habilitado
+    allowedFields.forEach(field => {
+      if (req.body[field] !== undefined) {
+        filteredData[field] = req.body[field];
       }
+    });
+
+    const producto = await prisma.producto.create({
+      data: filteredData
     });
     res.json(producto);
   } catch (error) {
+    console.error('Error creando producto:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
 app.put('/api/productos/:id', async (req, res) => {
   try {
+    // Campos permitidos para el modelo Producto
+    const allowedFields = [
+      'nombre',
+      'descripcion',
+      'categoria',
+      'talla',
+      'precio',
+      'costo',
+      'stock',
+      'stockMinimo',
+      'requiereConfeccion',
+      'habilitado',
+      'fechaDeshabilitado'
+    ];
+
+    const filteredData = {};
+    allowedFields.forEach(field => {
+      if (req.body[field] !== undefined) {
+        filteredData[field] = req.body[field];
+      }
+    });
+
     const producto = await prisma.producto.update({
       where: { id: parseInt(req.params.id) },
-      data: req.body,
-      include: {
-        categoriaRef: true
-      }
+      data: filteredData
     });
     res.json(producto);
   } catch (error) {
+    console.error('Error actualizando producto:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -647,6 +687,93 @@ app.get('/api/inventario', async (req, res) => {
 });
 
 // === PRODUCCIÓN ===
+
+// 1. Rutas específicas PRIMERO (antes de /:id)
+app.get('/api/produccion/debug', async (req, res) => {
+  try {
+    const items = await prisma.itemProduccion.findMany({
+      include: {
+        producto: true,
+        detalle: {
+          include: {
+            pedido: {
+              include: {
+                cliente: true
+              }
+            }
+          }
+        }
+      },
+      orderBy: { id: 'desc' }
+    });
+
+    console.log(`DEBUG: Found ${items.length} items de producción (sin filtrar)`);
+    items.forEach(item => {
+      console.log(`Item ${item.id}: habilitado=${item.habilitado}, producto=${item.producto?.nombre}`);
+    });
+    res.json(items);
+  } catch (error) {
+    console.error('Error en GET /api/produccion/debug:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/produccion/pendientes', async (req, res) => {
+  try {
+    // Obtener pedidos con detalles que requieren confección
+    const pedidosPendientes = await prisma.pedido.findMany({
+      include: {
+        cliente: true,
+        detalles: {
+          include: {
+            producto: true
+          },
+          where: {
+            habilitado: true,
+            producto: {
+              requiereConfeccion: true,
+              habilitado: true
+            }
+          }
+        }
+      },
+      where: {
+        habilitado: true,
+        estado: {
+          in: ['PENDIENTE', 'EN_CONFECCION']
+        }
+      }
+    });
+
+    const itemsPendientes = [];
+    pedidosPendientes.forEach(pedido => {
+      pedido.detalles.forEach(detalle => {
+        if (detalle.producto.requiereConfeccion) {
+          itemsPendientes.push({
+            id: `pending_${pedido.id}_${detalle.id}`,
+            pedidoId: pedido.id,
+            detallePedidoId: detalle.id,
+            productoId: detalle.productoId,
+            cantidad: detalle.cantidad,
+            estado: detalle.estado || 'PENDIENTE',
+            fechaInicio: null,
+            fechaFin: null,
+            observaciones: `Pendiente para el pedido ${pedido.numero}`,
+            pedido: pedido,
+            producto: detalle.producto
+          });
+        }
+      });
+    });
+
+    res.json(itemsPendientes);
+  } catch (error) {
+    console.error('Error en GET /api/produccion/pendientes:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 2. Endpoint principal
 app.get('/api/produccion', async (req, res) => {
   try {
     const items = await prisma.itemProduccion.findMany({
@@ -666,7 +793,7 @@ app.get('/api/produccion', async (req, res) => {
       orderBy: { createdAt: 'desc' }
     });
 
-    console.log(`Found ${items.length} items de producción`);
+    console.log(`Found ${items.length} items de producción habilitados`);
     res.json(items);
   } catch (error) {
     console.error('Error en GET /api/produccion:', error);
@@ -674,6 +801,7 @@ app.get('/api/produccion', async (req, res) => {
   }
 });
 
+// 3. Endpoint por ID AL FINAL
 app.get('/api/produccion/:id', async (req, res) => {
   try {
     const item = await prisma.itemProduccion.findUnique({
@@ -699,68 +827,6 @@ app.get('/api/produccion/:id', async (req, res) => {
     res.json(item);
   } catch (error) {
     console.error('Error en GET /api/produccion/:id:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Endpoint para obtener items pendientes de producción (basado en pedidos)
-app.get('/api/produccion/pendientes', async (req, res) => {
-  try {
-    // Obtener pedidos con detalles que requieren confección
-    const pedidosPendientes = await prisma.pedido.findMany({
-      include: {
-        cliente: true,
-        detalles: {
-          include: {
-            producto: true
-          },
-          where: {
-            habilitado: true, // Solo detalles habilitados
-            producto: {
-              requiereConfeccion: true,
-              habilitado: true // Solo productos habilitados
-            }
-          }
-        }
-      },
-      where: {
-        habilitado: true, // Solo pedidos habilitados
-        estado: {
-          in: ['PENDIENTE', 'EN_CONFECCION']
-        }
-      }
-    });
-
-    // Convertir detalles de pedidos en items de producción pendientes
-    const itemsPendientes = [];
-
-    pedidosPendientes.forEach(pedido => {
-      pedido.detalles.forEach(detalle => {
-        if (detalle.producto.requiereConfeccion) {
-          itemsPendientes.push({
-            id: `pending_${pedido.id}_${detalle.id}`,
-            pedidoId: pedido.id,
-            detallePedidoId: detalle.id,
-            productoId: detalle.productoId,
-            cantidad: detalle.cantidad,
-            estado: detalle.estado || 'PENDIENTE',
-            fechaInicio: null,
-            fechaFin: null,
-            observaciones: `Confección requerida para ${detalle.producto.nombre}`,
-            // Datos del pedido y cliente para mostrar
-            pedido: {
-              numero: pedido.numero,
-              cliente: pedido.cliente
-            },
-            producto: detalle.producto,
-            isPending: true // Flag para identificar items pendientes
-          });
-        }
-      });
-    });
-
-    res.json(itemsPendientes);
-  } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });

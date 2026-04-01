@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
@@ -13,6 +13,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
+import { Subscription } from 'rxjs';
 import { PedidoService } from '../pedido.service';
 import { Pedido, EstadoPedido } from '../../shared/models/models';
 import { FormularioPedidoComponent } from '../formulario-pedido/formulario-pedido.component';
@@ -21,6 +22,7 @@ import { ExportService } from '../../core/services/export.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { VentasFilterService, RangoFechas } from '../../core/services/ventas-filter.service';
 import { ProduccionService } from '../../produccion/produccion.service';
+import { EventosService } from '../../shared/services/eventos.service';
 
 @Component({
   selector: 'app-lista-pedidos',
@@ -45,10 +47,10 @@ import { ProduccionService } from '../../produccion/produccion.service';
   templateUrl: './lista-pedidos.component.html',
   styleUrl: './lista-pedidos.component.scss'
 })
-export class ListaPedidosComponent implements OnInit {
+export class ListaPedidosComponent implements OnInit, OnDestroy {
   pedidos: Pedido[] = [];
   pedidosFiltrados: Pedido[] = [];
-  displayedColumns: string[] = ['id', 'numero', 'clienteId', 'subtotal', 'total', 'acciones'];
+  displayedColumns: string[] = ['id', 'numero', 'clienteId', 'subtotal', 'total', 'estados', 'acciones'];
   pageSizeOptions: number[] = [5, 10, 25];
   pageSize = 5;
   currentPage = 0;
@@ -62,6 +64,9 @@ export class ListaPedidosComponent implements OnInit {
   formularioFechas: FormGroup;
   rangoFechasActual: RangoFechas;
 
+  // Subscripción para eventos de sincronización
+  private eventosSubscription?: Subscription;
+
   constructor(
     private pedidoService: PedidoService,
     private dialog: MatDialog,
@@ -70,7 +75,8 @@ export class ListaPedidosComponent implements OnInit {
     private ventasFilterService: VentasFilterService,
     private produccionService: ProduccionService,
     private fb: FormBuilder,
-    private dialogoService: DialogoService
+    private dialogoService: DialogoService,
+    private eventosService: EventosService
   ) {
     this.rangoFechasActual = this.ventasFilterService.obtenerRangoFechasActual();
     this.formularioFechas = this.fb.group({
@@ -82,6 +88,21 @@ export class ListaPedidosComponent implements OnInit {
   ngOnInit() {
     this.cargarPedidos();
     this.suscribirseARangoFechas();
+    this.suscribirseAEventos();
+  }
+
+  ngOnDestroy() {
+    if (this.eventosSubscription) {
+      this.eventosSubscription.unsubscribe();
+    }
+  }
+
+  suscribirseAEventos() {
+    // Escuchar actualizaciones de producción
+    this.eventosSubscription = this.eventosService.produccionActualizada$.subscribe(() => {
+      console.log('Estado de producción actualizado, recargando pedidos...');
+      this.cargarPedidos();
+    });
   }
 
   suscribirseARangoFechas() {
@@ -122,8 +143,13 @@ export class ListaPedidosComponent implements OnInit {
   aplicarFiltros() {
     this.pedidosFiltrados = this.pedidos.filter((pedido) => {
       const coincideNumero = pedido.numero.toString().includes(this.filtroNumero);
-      const estadoPedido = this.obtenerEstadoPedido(pedido);
-      const coincideEstado = !this.filtroEstado || estadoPedido === this.filtroEstado;
+
+      // Filtrar por estado: verificar si al menos un detalle coincide con el estado seleccionado
+      let coincideEstado = true;
+      if (this.filtroEstado) {
+        coincideEstado = pedido.detalles?.some(detalle => detalle.estado === this.filtroEstado) || false;
+      }
+
       return coincideNumero && coincideEstado;
     });
 
@@ -135,6 +161,18 @@ export class ListaPedidosComponent implements OnInit {
 
     this.totalItems = this.pedidosFiltrados.length;
     this.currentPage = 0;
+  }
+
+  /**
+   * Obtener los estados únicos de los detalles de un pedido
+   */
+  obtenerEstadosDetalles(pedido: Pedido): string[] {
+    if (!pedido.detalles || pedido.detalles.length === 0) {
+      return ['PENDIENTE'];
+    }
+
+    const estadosUnicos = [...new Set(pedido.detalles.map(detalle => detalle.estado))];
+    return estadosUnicos;
   }
 
   /**
@@ -299,10 +337,6 @@ export class ListaPedidosComponent implements OnInit {
           this.pedidoService.actualizar(pedido.id, resultado).subscribe({
             next: (pedidoActualizado) => {
               this.notificationService.success('Pedido actualizado correctamente');
-
-              // Sincronizar items de producción después de la edición
-              this.sincronizarItemsProduccion(pedidoActualizado);
-
               this.cargarPedidos();
             },
             error: (error) => {
@@ -363,189 +397,6 @@ export class ListaPedidosComponent implements OnInit {
    * Sincroniza los items de producción con los detalles actuales del pedido
    * Crea items faltantes, elimina innecesarios y actualiza estados existentes
    */
-  sincronizarItemsProduccion(pedido: Pedido): void {
-    // Primero obtener todos los items de producción existentes para este pedido
-    this.produccionService.obtenerTodos().subscribe({
-      next: (itemsProduccionExistentes) => {
-        const itemsDelPedido = itemsProduccionExistentes.filter(item => item.detalle?.pedido?.id === pedido.id);
-
-        // Obtener detalles que necesitan producción
-        const detallesQueNecesitanProduccion = pedido.detalles?.filter(detalle =>
-          detalle.estado === EstadoPedido.PENDIENTE || detalle.estado === EstadoPedido.EN_CONFECCION
-        ) || [];
-
-        let operacionesCompletadas = 0;
-        let totalOperaciones = 0;
-
-        // 1. Crear items que faltan
-        const productosConItemsExistentes = itemsDelPedido.map(item => item.productoId);
-        const detallesSinItems = detallesQueNecesitanProduccion.filter(detalle =>
-          !productosConItemsExistentes.includes(detalle.productoId)
-        );
-
-        if (detallesSinItems.length > 0) {
-          totalOperaciones++;
-          this.produccionService.crearItemsDesdeDetallePedido(
-            pedido.id,
-            pedido.numero,
-            detallesSinItems
-          ).subscribe({
-            next: (itemsCreados) => {
-              operacionesCompletadas++;
-              if (itemsCreados.length > 0) {
-                console.log(`${itemsCreados.length} nuevo(s) item(s) agregado(s) a producción`);
-              }
-              this.verificarCompletitudSincronizacion(operacionesCompletadas, totalOperaciones);
-            },
-            error: (error) => {
-              operacionesCompletadas++;
-              console.error('Error al crear nuevos items de producción:', error);
-              this.verificarCompletitudSincronizacion(operacionesCompletadas, totalOperaciones);
-            }
-          });
-        }
-
-        // 2. Actualizar estados de detalles (ya no comparamos estados en ItemProduccion)
-        // Los items de producción ya no tienen estado propio, solo referencian el detalle
-        detallesQueNecesitanProduccion.forEach(detalle => {
-          const itemExistente = itemsDelPedido.find(item => item.productoId === detalle.productoId);
-
-          // Si existe un item de producción, actualizamos el estado en el detalle
-          if (itemExistente) {
-            totalOperaciones++;
-            this.produccionService.cambiarEstado(itemExistente.id!, detalle.estado).subscribe({
-              next: () => {
-                operacionesCompletadas++;
-                console.log(`Estado actualizado para item de producción ${itemExistente.id} -> ${detalle.estado}`);
-                this.verificarCompletitudSincronizacion(operacionesCompletadas, totalOperaciones);
-              },
-              error: (error) => {
-                operacionesCompletadas++;
-                console.error('Error al actualizar estado de item de producción:', error);
-                this.verificarCompletitudSincronizacion(operacionesCompletadas, totalOperaciones);
-              }
-            });
-          }
-        });
-
-        // 3. Eliminar items que ya no son necesarios (productos que cambiaron a TERMINADO)
-        const productosQueNecesitanProduccion = detallesQueNecesitanProduccion.map(d => d.productoId);
-        const itemsParaEliminar = itemsDelPedido.filter(item =>
-          !productosQueNecesitanProduccion.includes(item.productoId)
-        );
-
-        itemsParaEliminar.forEach(item => {
-          totalOperaciones++;
-          this.produccionService.eliminar(item.id!).subscribe({
-            next: () => {
-              operacionesCompletadas++;
-              console.log(`Item de producción ${item.id} eliminado (producto ya terminado)`);
-              this.verificarCompletitudSincronizacion(operacionesCompletadas, totalOperaciones);
-            },
-            error: (error) => {
-              operacionesCompletadas++;
-              console.error('Error al eliminar item de producción:', error);
-              this.verificarCompletitudSincronizacion(operacionesCompletadas, totalOperaciones);
-            }
-          });
-        });
-
-        // Si no hay operaciones que hacer, mostrar mensaje
-        if (totalOperaciones === 0) {
-          this.notificationService.success('Los items de producción ya están sincronizados');
-        }
-      },
-      error: (error) => {
-        console.error('Error al obtener items de producción existentes:', error);
-        // En caso de error, crear items nuevos como fallback
-        this.crearItemsProduccion(pedido);
-      }
-    });
-  }
-
-  /**
-   * Verifica si todas las operaciones de sincronización se han completado
-   */
-  private verificarCompletitudSincronizacion(completadas: number, total: number): void {
-    if (completadas === total) {
-      this.notificationService.success(
-        `Sincronización completada: ${total} operación(es) realizada(s)`
-      );
-    }
-  }
-
-  /**
-   * Sincroniza la producción para todos los pedidos
-   */
-  sincronizarTodasLasProduccion(): void {
-    this.dialogoService.confirmarAccion(
-      'Sincronizar Producción',
-      '¿Está seguro de que desea sincronizar todos los items de producción? Esta acción puede tomar unos momentos.',
-      'Sincronizar'
-    ).subscribe((confirmado) => {
-      if (confirmado) {
-        this.notificationService.success('Iniciando sincronización de producción...');
-
-        let pedidosProcesados = 0;
-        let totalItemsCreados = 0;
-
-        this.pedidos.forEach((pedido, index) => {
-          setTimeout(() => {
-            this.produccionService.obtenerTodos().subscribe({
-              next: (itemsProduccionExistentes) => {
-                const itemsDelPedido = itemsProduccionExistentes.filter(item => item.detalle?.pedido?.id === pedido.id);
-
-                const detallesQueNecesitanProduccion = pedido.detalles?.filter(detalle =>
-                  detalle.estado === EstadoPedido.PENDIENTE || detalle.estado === EstadoPedido.EN_CONFECCION
-                ) || [];
-
-                const productosConItemsExistentes = itemsDelPedido.map(item => item.productoId);
-                const detallesSinItems = detallesQueNecesitanProduccion.filter(detalle =>
-                  !productosConItemsExistentes.includes(detalle.productoId)
-                );
-
-                if (detallesSinItems.length > 0) {
-                  this.produccionService.crearItemsDesdeDetallePedido(
-                    pedido.id,
-                    pedido.numero,
-                    detallesSinItems
-                  ).subscribe({
-                    next: (itemsCreados) => {
-                      totalItemsCreados += itemsCreados.length;
-                      pedidosProcesados++;
-
-                      if (pedidosProcesados === this.pedidos.length) {
-                        this.notificationService.success(
-                          `Sincronización completada: ${totalItemsCreados} item(s) agregado(s) a producción`
-                        );
-                      }
-                    },
-                    error: (error) => {
-                      console.error(`Error al sincronizar pedido ${pedido.numero}:`, error);
-                      pedidosProcesados++;
-                    }
-                  });
-                } else {
-                  pedidosProcesados++;
-
-                  if (pedidosProcesados === this.pedidos.length) {
-                    this.notificationService.success(
-                      `Sincronización completada: ${totalItemsCreados} item(s) agregado(s) a producción`
-                    );
-                  }
-                }
-              },
-              error: (error) => {
-                console.error(`Error al obtener items existentes para pedido ${pedido.numero}:`, error);
-                pedidosProcesados++;
-              }
-            });
-          }, index * 100); // Pequeño delay entre requests para evitar sobrecarga
-        });
-      }
-    });
-  }
-
   cambiarEstado(pedido: Pedido, nuevoEstado: EstadoPedido) {
     this.dialogoService.confirmarAccion(
       'Cambiar estado',
@@ -587,15 +438,15 @@ export class ListaPedidosComponent implements OnInit {
     });
   }
 
-  getColorEstado(estado: EstadoPedido): string {
-    const colores: { [key in EstadoPedido]: string } = {
-      [EstadoPedido.PENDIENTE]: 'warn',
-      [EstadoPedido.EN_CONFECCION]: 'accent',
-      [EstadoPedido.TERMINADO]: 'primary',
-      [EstadoPedido.ENVIADO]: 'info',
-      [EstadoPedido.ENTREGADO]: 'success',
-      [EstadoPedido.CANCELADO]: 'default'
+  getColorEstado(estado: EstadoPedido | string): string {
+    const colores: { [key: string]: string } = {
+      [EstadoPedido.PENDIENTE]: '#ff9800',
+      [EstadoPedido.EN_CONFECCION]: '#2196f3',
+      [EstadoPedido.TERMINADO]: '#4caf50',
+      [EstadoPedido.ENVIADO]: '#9c27b0',
+      [EstadoPedido.ENTREGADO]: '#8bc34a',
+      [EstadoPedido.CANCELADO]: '#f44336'
     };
-    return colores[estado] || 'primary';
+    return colores[estado] || '#607d8b';
   }
 }

@@ -123,7 +123,7 @@ model ItemProduccion {
   updatedAt         DateTime?
 
   producto          Producto      @relation(fields: [productoId], references: [id])
-  detalle          DetallePedido @relation(fields: [detalleId], references: [id])
+  detalle          DetallePedido @relation(fields: [detalleId], references: [id], onDelete: Cascade)
 
   @@map("items_produccion")
 }

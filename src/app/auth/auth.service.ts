@@ -6,7 +6,8 @@ import { Usuario, UserRole } from '../shared/models/models';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private apiUrl = 'http://localhost:3001/api/users';
+  private apiUrl = 'http://localhost:3001/api/auth/login';
+  private usersUrl = 'http://localhost:3001/api/users';
   private isAuthenticatedSubject = new BehaviorSubject<boolean>(this.checkAuthentication());
   public isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
   private userStatusCheckInterval: any;
@@ -22,23 +23,24 @@ export class AuthService {
   }
 
   login(username: string, password: string): Observable<boolean> {
-    return this.http.get<Usuario[]>(this.apiUrl).pipe(
-      map((users) => {
-        if (users && users.length > 0) {
-          const user = users.find(u =>
-            u.username === username &&
-            u.password === password &&
-            u.activo !== false &&  // Usuario debe estar activo
-            u.habilitado !== false  // Usuario debe estar habilitado (no eliminado)
-          );
-          if (user) {
-            const token = user.token || 'fake-jwt-token-' + user.id;
-            this.setAuthData(token, user.role, user.id, user.username);
-            this.isAuthenticatedSubject.next(true);
-            // Iniciar verificación periódica después del login exitoso
-            this.startUserStatusCheck();
-            return true;
-          }
+    const loginData = { username, password };
+
+    return this.http.post<any>(this.apiUrl, loginData).pipe(
+      map((response) => {
+        if (response && response.user && response.message === 'Login exitoso') {
+          const user = response.user;
+          const role = response.role;
+
+          // Generar token temporal si no existe
+          const token = user.token || 'fake-jwt-token-' + user.id;
+
+          // Guardar datos de autenticación
+          this.setAuthData(token, user.role, user.id, user.username);
+          this.isAuthenticatedSubject.next(true);
+
+          // Iniciar verificación periódica después del login exitoso
+          this.startUserStatusCheck();
+          return true;
         }
         return false;
       }),
@@ -121,7 +123,7 @@ export class AuthService {
       return;
     }
 
-    this.http.get<Usuario>(`${this.apiUrl}/${userId}`).subscribe({
+    this.http.get<Usuario>(`${this.usersUrl}/${userId}`).subscribe({
       next: (user) => {
         if (!user || user.activo === false || user.habilitado === false) {
           console.warn('Usuario desactivado o eliminado, cerrando sesión...');

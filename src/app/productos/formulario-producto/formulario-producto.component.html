@@ -79,6 +79,13 @@
     </mat-error>
   </mat-form-field>
 
+  <div class="checkbox-container">
+    <mat-checkbox formControlName="requiereConfeccion">
+      Requiere Confección
+    </mat-checkbox>
+    <small class="hint-text">Marca esta casilla si el producto necesita proceso de confección</small>
+  </div>
+
   <mat-error *ngIf="formulario.hasError('costoMayorPrecio')">
     El costo no puede ser mayor o igual al precio
   </mat-error>

@@ -15,17 +15,13 @@
         </mat-option>
       </mat-select>
     </mat-form-field>
-
-    <button mat-icon-button color="primary" (click)="recargarDatos()" matTooltip="Recargar datos">
-      <mat-icon>refresh</mat-icon>
-    </button>
   </div>
 
   <table mat-table [dataSource]="itemsFiltrados" class="tabla-produccion">
     <!-- Número Pedido Column -->
     <ng-container matColumnDef="pedidoNumero">
       <th mat-header-cell *matHeaderCellDef>Número Pedido</th>
-      <td mat-cell *matCellDef="let element">{{ element.pedidoNumero }}</td>
+      <td mat-cell *matCellDef="let element">{{ element.numeroPedido || 'N/A' }}</td>
     </ng-container>
 
     <!-- Producto Column -->
