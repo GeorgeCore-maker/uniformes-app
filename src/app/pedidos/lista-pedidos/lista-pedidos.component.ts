@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
@@ -13,13 +13,16 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
+import { Subscription } from 'rxjs';
 import { PedidoService } from '../pedido.service';
 import { Pedido, EstadoPedido } from '../../shared/models/models';
 import { FormularioPedidoComponent } from '../formulario-pedido/formulario-pedido.component';
-import { DialogoConfirmacionComponent } from '../dialogo-confirmacion/dialogo-confirmacion.component';
+import { DialogoService } from '../../shared';
 import { ExportService } from '../../core/services/export.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { VentasFilterService, RangoFechas } from '../../core/services/ventas-filter.service';
+import { ProduccionService } from '../../produccion/produccion.service';
+import { EventosService } from '../../shared/services/eventos.service';
 
 @Component({
   selector: 'app-lista-pedidos',
@@ -44,10 +47,10 @@ import { VentasFilterService, RangoFechas } from '../../core/services/ventas-fil
   templateUrl: './lista-pedidos.component.html',
   styleUrl: './lista-pedidos.component.scss'
 })
-export class ListaPedidosComponent implements OnInit {
+export class ListaPedidosComponent implements OnInit, OnDestroy {
   pedidos: Pedido[] = [];
   pedidosFiltrados: Pedido[] = [];
-  displayedColumns: string[] = ['id', 'numero', 'clienteId', 'estado', 'subtotal', 'total', 'acciones'];
+  displayedColumns: string[] = ['id', 'numero', 'clienteId', 'subtotal', 'total', 'estados', 'acciones'];
   pageSizeOptions: number[] = [5, 10, 25];
   pageSize = 5;
   currentPage = 0;
@@ -61,13 +64,19 @@ export class ListaPedidosComponent implements OnInit {
   formularioFechas: FormGroup;
   rangoFechasActual: RangoFechas;
 
+  // Subscripción para eventos de sincronización
+  private eventosSubscription?: Subscription;
+
   constructor(
     private pedidoService: PedidoService,
     private dialog: MatDialog,
     private exportService: ExportService,
     private notificationService: NotificationService,
     private ventasFilterService: VentasFilterService,
-    private fb: FormBuilder
+    private produccionService: ProduccionService,
+    private fb: FormBuilder,
+    private dialogoService: DialogoService,
+    private eventosService: EventosService
   ) {
     this.rangoFechasActual = this.ventasFilterService.obtenerRangoFechasActual();
     this.formularioFechas = this.fb.group({
@@ -79,6 +88,21 @@ export class ListaPedidosComponent implements OnInit {
   ngOnInit() {
     this.cargarPedidos();
     this.suscribirseARangoFechas();
+    this.suscribirseAEventos();
+  }
+
+  ngOnDestroy() {
+    if (this.eventosSubscription) {
+      this.eventosSubscription.unsubscribe();
+    }
+  }
+
+  suscribirseAEventos() {
+    // Escuchar actualizaciones de producción
+    this.eventosSubscription = this.eventosService.produccionActualizada$.subscribe(() => {
+      console.log('Estado de producción actualizado, recargando pedidos...');
+      this.cargarPedidos();
+    });
   }
 
   suscribirseARangoFechas() {
@@ -92,6 +116,20 @@ export class ListaPedidosComponent implements OnInit {
     this.pedidoService.obtenerTodos().subscribe({
       next: (pedidos) => {
         this.pedidos = pedidos;
+
+        // Asegurarse de que el filtro de fechas incluya hoy
+        const hoy = new Date();
+        const rangoActual = this.rangoFechasActual;
+
+        // Si la fecha fin es anterior a hoy, actualizarla a hoy
+        if (rangoActual.fechaFin < hoy) {
+          const nuevoRango = {
+            fechaInicio: rangoActual.fechaInicio,
+            fechaFin: hoy
+          };
+          this.ventasFilterService.actualizarRangoFechas(nuevoRango);
+        }
+
         this.aplicarFiltros();
         this.notificationService.success('Pedidos cargados correctamente');
       },
@@ -105,7 +143,13 @@ export class ListaPedidosComponent implements OnInit {
   aplicarFiltros() {
     this.pedidosFiltrados = this.pedidos.filter((pedido) => {
       const coincideNumero = pedido.numero.toString().includes(this.filtroNumero);
-      const coincideEstado = !this.filtroEstado || pedido.estado === this.filtroEstado;
+
+      // Filtrar por estado: verificar si al menos un detalle coincide con el estado seleccionado
+      let coincideEstado = true;
+      if (this.filtroEstado) {
+        coincideEstado = pedido.detalles?.some(detalle => detalle.estado === this.filtroEstado) || false;
+      }
+
       return coincideNumero && coincideEstado;
     });
 
@@ -117,6 +161,57 @@ export class ListaPedidosComponent implements OnInit {
 
     this.totalItems = this.pedidosFiltrados.length;
     this.currentPage = 0;
+  }
+
+  /**
+   * Obtener los estados únicos de los detalles de un pedido
+   */
+  obtenerEstadosDetalles(pedido: Pedido): string[] {
+    if (!pedido.detalles || pedido.detalles.length === 0) {
+      return ['PENDIENTE'];
+    }
+
+    const estadosUnicos = [...new Set(pedido.detalles.map(detalle => detalle.estado))];
+    return estadosUnicos;
+  }
+
+  /**
+   * Obtener el estado de un pedido basado en los estados de sus detalles
+   */
+  obtenerEstadoPedido(pedido: Pedido): string {
+    if (!pedido.detalles || pedido.detalles.length === 0) {
+      return 'PENDIENTE';
+    }
+
+    const estados = pedido.detalles.map(detalle => detalle.estado);
+
+    // Si todos los detalles están entregados
+    if (estados.every(estado => estado === EstadoPedido.ENTREGADO)) {
+      return EstadoPedido.ENTREGADO;
+    }
+
+    // Si todos los detalles están terminados o entregados
+    if (estados.every(estado => estado === EstadoPedido.TERMINADO || estado === EstadoPedido.ENTREGADO)) {
+      return EstadoPedido.TERMINADO;
+    }
+
+    // Si hay al menos un detalle en confección
+    if (estados.some(estado => estado === EstadoPedido.EN_CONFECCION)) {
+      return EstadoPedido.EN_CONFECCION;
+    }
+
+    // Si hay al menos un detalle enviado
+    if (estados.some(estado => estado === EstadoPedido.ENVIADO)) {
+      return EstadoPedido.ENVIADO;
+    }
+
+    // Si todos están cancelados
+    if (estados.every(estado => estado === EstadoPedido.CANCELADO)) {
+      return EstadoPedido.CANCELADO;
+    }
+
+    // Por defecto, pendiente
+    return EstadoPedido.PENDIENTE;
   }
 
   get pedidosPaginados(): Pedido[] {
@@ -228,15 +323,19 @@ export class ListaPedidosComponent implements OnInit {
 
   abrirFormulario(pedido?: Pedido) {
     const dialogRef = this.dialog.open(FormularioPedidoComponent, {
-      width: '600px',
+      width: '900px',
+      maxWidth: '95vw',
+      maxHeight: '95vh',
+      panelClass: 'formulario-pedido-dialog',
       data: pedido || {}
     });
 
     dialogRef.afterClosed().subscribe((resultado) => {
       if (resultado) {
         if (pedido?.id) {
+          // Para edición, el resultado ya incluye las propiedades originales del pedido
           this.pedidoService.actualizar(pedido.id, resultado).subscribe({
-            next: () => {
+            next: (pedidoActualizado) => {
               this.notificationService.success('Pedido actualizado correctamente');
               this.cargarPedidos();
             },
@@ -247,8 +346,14 @@ export class ListaPedidosComponent implements OnInit {
           });
         } else {
           this.pedidoService.crear(resultado).subscribe({
-            next: () => {
+            next: (pedidoCreado) => {
               this.notificationService.success('Pedido creado correctamente');
+
+              // Crear items de producción si es necesario
+              if (resultado.crearItemsProduccion && pedidoCreado.detalles) {
+                this.crearItemsProduccion(pedidoCreado);
+              }
+
               this.cargarPedidos();
             },
             error: (error) => {
@@ -261,43 +366,63 @@ export class ListaPedidosComponent implements OnInit {
     });
   }
 
-  cambiarEstado(pedido: Pedido) {
-    const estadoActual = Object.values(EstadoPedido).indexOf(pedido.estado);
-    const proximoEstado = Object.values(EstadoPedido)[estadoActual + 1];
+  private crearItemsProduccion(pedido: Pedido): void {
+    // Filtrar detalles que necesitan producción (PENDIENTE o EN_CONFECCION)
+    const detallesParaProduccion = pedido.detalles?.filter(detalle =>
+      detalle.estado === EstadoPedido.PENDIENTE || detalle.estado === EstadoPedido.EN_CONFECCION
+    ) || [];
 
-    if (proximoEstado) {
-      const dialogRef = this.dialog.open(DialogoConfirmacionComponent, {
-        width: '300px',
-        data: {
-          titulo: 'Cambiar estado',
-          mensaje: `¿Cambiar pedido a ${proximoEstado}?`
-        }
-      });
-
-      dialogRef.afterClosed().subscribe((confirmado) => {
-        if (confirmado) {
-          this.pedidoService.cambiarEstado(pedido.id, proximoEstado).subscribe({
-            next: () => {
-              this.notificationService.success('Estado del pedido actualizado');
-              this.cargarPedidos();
-            },
-            error: (error) => {
-              console.error('Error al cambiar estado:', error);
-              this.notificationService.error('Error al cambiar el estado del pedido');
-            }
-          });
+    if (detallesParaProduccion.length > 0) {
+      this.produccionService.crearItemsDesdeDetallePedido(
+        pedido.id,
+        pedido.numero,
+        detallesParaProduccion
+      ).subscribe({
+        next: (itemsCreados) => {
+          if (itemsCreados.length > 0) {
+            this.notificationService.success(
+              `${itemsCreados.length} item(s) agregado(s) a producción automáticamente`
+            );
+          }
+        },
+        error: (error) => {
+          console.error('Error al crear items de producción:', error);
+          this.notificationService.error('Error al crear items de producción');
         }
       });
     }
   }
 
-  eliminar(pedido: Pedido) {
-    const dialogRef = this.dialog.open(DialogoConfirmacionComponent, {
-      width: '300px',
-      data: { titulo: 'Eliminar pedido', mensaje: `¿Está seguro de eliminar el pedido ${pedido.numero}?` }
+  /**
+   * Sincroniza los items de producción con los detalles actuales del pedido
+   * Crea items faltantes, elimina innecesarios y actualiza estados existentes
+   */
+  cambiarEstado(pedido: Pedido, nuevoEstado: EstadoPedido) {
+    this.dialogoService.confirmarAccion(
+      'Cambiar estado',
+      `¿Cambiar pedido a ${nuevoEstado}?`,
+      'Cambiar'
+    ).subscribe((confirmado) => {
+      if (confirmado) {
+        this.pedidoService.cambiarEstado(pedido.id, nuevoEstado).subscribe({
+          next: () => {
+            this.notificationService.success('Estado del pedido actualizado');
+            this.cargarPedidos();
+          },
+          error: (error) => {
+            console.error('Error al cambiar estado:', error);
+            this.notificationService.error('Error al cambiar el estado del pedido');
+          }
+        });
+      }
     });
+  }
 
-    dialogRef.afterClosed().subscribe((confirmado) => {
+  eliminar(pedido: Pedido) {
+    this.dialogoService.confirmarEliminacion(
+      'Eliminar pedido',
+      `¿Está seguro de eliminar el pedido ${pedido.numero}?`
+    ).subscribe((confirmado) => {
       if (confirmado) {
         this.pedidoService.eliminar(pedido.id).subscribe({
           next: () => {
@@ -313,15 +438,15 @@ export class ListaPedidosComponent implements OnInit {
     });
   }
 
-  getColorEstado(estado: EstadoPedido): string {
-    const colores: { [key in EstadoPedido]: string } = {
-      [EstadoPedido.PENDIENTE]: 'warn',
-      [EstadoPedido.EN_CONFECCION]: 'accent',
-      [EstadoPedido.TERMINADO]: 'primary',
-      [EstadoPedido.ENVIADO]: 'info',
-      [EstadoPedido.ENTREGADO]: 'success',
-      [EstadoPedido.CANCELADO]: 'default'
+  getColorEstado(estado: EstadoPedido | string): string {
+    const colores: { [key: string]: string } = {
+      [EstadoPedido.PENDIENTE]: '#ff9800',
+      [EstadoPedido.EN_CONFECCION]: '#2196f3',
+      [EstadoPedido.TERMINADO]: '#4caf50',
+      [EstadoPedido.ENVIADO]: '#9c27b0',
+      [EstadoPedido.ENTREGADO]: '#8bc34a',
+      [EstadoPedido.CANCELADO]: '#f44336'
     };
-    return colores[estado] || 'primary';
+    return colores[estado] || '#607d8b';
   }
 }

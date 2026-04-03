@@ -52,9 +52,67 @@ export class VentasFilterService {
     const rango = rangoFechas || this.obtenerRangoFechasActual();
 
     return pedidos.filter((pedido: Pedido) => {
-      const fechaCreacion = new Date(pedido.fechaCreacion);
-      return fechaCreacion >= rango.fechaInicio && fechaCreacion <= rango.fechaFin;
+      // Intentar obtener la fecha de creación desde diferentes propiedades
+      let fechaCreacion: Date;
+
+      if (pedido.fechaCreacion) {
+        fechaCreacion = new Date(pedido.fechaCreacion);
+      } else if (pedido.createdAt) {
+        fechaCreacion = new Date(pedido.createdAt);
+      } else if (pedido.updatedAt) {
+        // Como último recurso, usar updatedAt
+        fechaCreacion = new Date(pedido.updatedAt);
+      } else {
+        // Si no hay fecha, usar la fecha actual
+        fechaCreacion = new Date();
+      }
+
+      // Normalizar fechas para comparación (solo año, mes, día)
+      const fechaCreacionNorm = new Date(fechaCreacion.getFullYear(), fechaCreacion.getMonth(), fechaCreacion.getDate());
+      const fechaInicioNorm = new Date(rango.fechaInicio.getFullYear(), rango.fechaInicio.getMonth(), rango.fechaInicio.getDate());
+      const fechaFinNorm = new Date(rango.fechaFin.getFullYear(), rango.fechaFin.getMonth(), rango.fechaFin.getDate());
+
+      return fechaCreacionNorm >= fechaInicioNorm && fechaCreacionNorm <= fechaFinNorm;
     });
+  }
+
+  /**
+   * Obtener el estado de un pedido basado en los estados de sus detalles
+   */
+  obtenerEstadoPedido(pedido: Pedido): string {
+    if (!pedido.detalles || pedido.detalles.length === 0) {
+      return 'PENDIENTE';
+    }
+
+    const estados = pedido.detalles.map(detalle => detalle.estado);
+
+    // Si todos los detalles están entregados
+    if (estados.every(estado => estado === 'ENTREGADO')) {
+      return 'ENTREGADO';
+    }
+
+    // Si todos los detalles están terminados o entregados
+    if (estados.every(estado => estado === 'TERMINADO' || estado === 'ENTREGADO')) {
+      return 'TERMINADO';
+    }
+
+    // Si hay al menos un detalle en confección
+    if (estados.some(estado => estado === 'EN_CONFECCION')) {
+      return 'EN_CONFECCION';
+    }
+
+    // Si hay al menos un detalle enviado
+    if (estados.some(estado => estado === 'ENVIADO')) {
+      return 'ENVIADO';
+    }
+
+    // Si todos están cancelados
+    if (estados.every(estado => estado === 'CANCELADO')) {
+      return 'CANCELADO';
+    }
+
+    // Por defecto, pendiente
+    return 'PENDIENTE';
   }
 
   /**
@@ -66,7 +124,7 @@ export class VentasFilterService {
     rangoFechas?: RangoFechas
   ): Pedido[] {
     const filtrados = this.filtrarPorRangoFechas(pedidos, rangoFechas);
-    return filtrados.filter((pedido: Pedido) => pedido.estado === estado);
+    return filtrados.filter((pedido: Pedido) => this.obtenerEstadoPedido(pedido) === estado);
   }
 
   /**
@@ -93,7 +151,8 @@ export class VentasFilterService {
 
     const estadosPedidos: { [key: string]: number } = {};
     filtrados.forEach((pedido: Pedido) => {
-      estadosPedidos[pedido.estado] = (estadosPedidos[pedido.estado] || 0) + 1;
+      const estado = this.obtenerEstadoPedido(pedido);
+      estadosPedidos[estado] = (estadosPedidos[estado] || 0) + 1;
     });
 
     return {

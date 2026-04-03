@@ -5,16 +5,16 @@ import { Rol, Usuario } from '../../shared/models/models';
 
 @Injectable({ providedIn: 'root' })
 export class RolService {
-  private apiUrl = 'http://localhost:3000/roles';
-  private usersUrl = 'http://localhost:3000/users';
+  private apiUrl = 'http://localhost:3001/api/roles';
+  private usersUrl = 'http://localhost:3001/api/users';
 
   constructor(private http: HttpClient) {}
 
   /**
-   * Obtener todos los roles
+   * Obtener todos los roles habilitados
    */
   obtenerTodos(): Observable<Rol[]> {
-    return this.http.get<Rol[]>(this.apiUrl);
+    return this.http.get<Rol[]>(`${this.apiUrl}?habilitado=true`);
   }
 
   /**
@@ -28,21 +28,36 @@ export class RolService {
    * Crear nuevo rol
    */
   crear(rol: Rol): Observable<Rol> {
-    return this.http.post<Rol>(this.apiUrl, rol);
+    const nuevoRol = {
+      ...rol,
+      habilitado: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    return this.http.post<Rol>(this.apiUrl, nuevoRol);
   }
 
   /**
    * Actualizar rol existente
    */
   actualizar(id: number, rol: Rol): Observable<Rol> {
-    return this.http.put<Rol>(`${this.apiUrl}/${id}`, rol);
+    const rolActualizado = {
+      ...rol,
+      habilitado: true,
+      updatedAt: new Date().toISOString()
+    };
+    return this.http.put<Rol>(`${this.apiUrl}/${id}`, rolActualizado);
   }
 
   /**
-   * Eliminar rol
+   * Eliminar rol (Borrado lógico - marca como deshabilitado)
    */
-  eliminar(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  eliminar(id: number): Observable<Rol> {
+    return this.http.patch<Rol>(`${this.apiUrl}/${id}`, {
+      habilitado: false,
+      fechaDeshabilitado: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    });
   }
 
   /**

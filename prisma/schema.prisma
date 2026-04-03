@@ -1,0 +1,143 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./uniformes.db"
+}
+
+model User {
+  id                 Int       @id @default(autoincrement())
+  username           String    @unique
+  password           String
+  role               String
+  activo             Boolean   @default(true)
+  token              String?
+  habilitado         Boolean   @default(true)
+  fechaDeshabilitado DateTime?
+  createdAt          DateTime?
+  updatedAt          DateTime?
+
+  @@map("users")
+}
+
+model Cliente {
+  id                 Int       @id @default(autoincrement())
+  nombre             String
+  telefono           String
+  email              String
+  direccion          String
+  ciudad             String
+  nit                String    @unique
+  habilitado         Boolean   @default(true)
+  fechaDeshabilitado DateTime?
+  createdAt          DateTime?
+  updatedAt          DateTime?
+
+  pedidos            Pedido[]
+
+  @@map("clientes")
+}
+
+model Categoria {
+  id                 Int       @id @default(autoincrement())
+  nombre             String
+  descripcion        String?
+  habilitado         Boolean   @default(true)
+  fechaDeshabilitado DateTime?
+  createdAt          DateTime?
+  updatedAt          DateTime?
+
+  @@map("categorias")
+}
+
+model Producto {
+  id                 Int       @id @default(autoincrement())
+  nombre             String
+  descripcion        String?
+  categoria          String
+  talla              String?
+  precio             Float
+  costo              Float?
+  stock              Int       @default(0)
+  stockMinimo        Int       @default(5)
+  requiereConfeccion Boolean   @default(false)
+  habilitado         Boolean   @default(true)
+  fechaDeshabilitado DateTime?
+
+  itemsProduccion    ItemProduccion[]
+  detallesPedido     DetallePedido[]
+
+  @@map("productos")
+}
+
+model Pedido {
+  id                Int             @id @default(autoincrement())
+  clienteId         Int
+  numero            String          @unique
+  incluirIva        Boolean?        @default(true)
+  subtotal          Float
+  impuesto          Float?          @default(0)
+  total             Float
+  margen            Float?          @default(0)
+  fechaCreacion     String?
+  observaciones     String?
+  habilitado        Boolean         @default(true)
+  fechaDeshabilitado DateTime?
+  crearItemsProduccion Boolean?     @default(false)
+  createdAt         DateTime?
+  updatedAt         DateTime?
+
+  cliente           Cliente         @relation(fields: [clienteId], references: [id])
+  detalles          DetallePedido[]
+
+  @@map("pedidos")
+}
+
+model DetallePedido {
+  id              Int      @id @default(autoincrement())
+  pedidoId        Int
+  productoId      Int
+  cantidad        Int
+  precioUnitario  String
+  subtotal        Float?
+  estado          String   @default("PENDIENTE")
+
+  pedido          Pedido   @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+  producto        Producto @relation(fields: [productoId], references: [id])
+  itemsProduccion ItemProduccion[]
+
+  @@map("detalle_pedidos")
+}
+
+model ItemProduccion {
+  id                Int      @id @default(autoincrement())
+  detalleId         Int      // Ahora es requerido, no opcional
+  productoId        Int
+  cantidad          Int
+  fechaInicio       DateTime?
+  observaciones     String?
+  habilitado        Boolean  @default(true)
+  createdAt         DateTime?
+  updatedAt         DateTime?
+
+  producto          Producto      @relation(fields: [productoId], references: [id])
+  detalle          DetallePedido @relation(fields: [detalleId], references: [id], onDelete: Cascade)
+
+  @@map("items_produccion")
+}
+
+model Rol {
+  id                 Int       @id @default(autoincrement())
+  nombre             String
+  descripcion        String?
+  permisos           String
+  activo             Boolean   @default(true)
+  habilitado         Boolean   @default(true)
+  fechaDeshabilitado DateTime?
+  createdAt          DateTime?
+  updatedAt          DateTime?
+
+  @@map("roles")
+}

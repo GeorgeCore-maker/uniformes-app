@@ -1,12 +1,91 @@
+::ng-deep .formulario-producto-dialog {
+  .mdc-dialog__surface {
+    max-width: 700px;
+    width: 100%;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .mat-mdc-dialog-container {
+    max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+.dialog-title-container {
+  padding: 20px 24px 16px 24px;
+  border-bottom: 1px solid #e0e0e0;
+  margin: 0;
+
+  h1 {
+    margin: 0;
+    color: #333;
+    font-weight: 500;
+  }
+}
+
+.checkbox-container {
+  margin: 16px 0;
+  padding: 12px 0;
+
+  mat-checkbox {
+    margin-bottom: 8px;
+  }
+
+  .hint-text {
+    color: rgba(0, 0, 0, 0.6);
+    font-size: 12px;
+    margin-left: 32px;
+    display: block;
+  }
+}
+
+mat-dialog-content {
+  padding: 20px 24px;
+  max-height: calc(90vh - 150px);
+  overflow-y: auto;
+  flex: 1;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+
+    &:hover {
+      background: #999;
+    }
+  }
+}
+
+form {
+  width: 100%;
+}
+
 mat-form-field {
   display: block;
   width: 100%;
-  margin-bottom: 15px;
+  margin-bottom: 16px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
 }
 
-.botones {
+mat-dialog-actions {
+  padding: 16px 24px 20px 24px;
   display: flex;
-  gap: 10px;
   justify-content: flex-end;
-  margin-top: 20px;
+  gap: 12px;
+  border-top: 1px solid #e0e0e0;
+  flex-shrink: 0;
 }

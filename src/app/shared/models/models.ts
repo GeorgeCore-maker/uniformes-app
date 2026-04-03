@@ -19,6 +19,16 @@ export enum CategoriaProducto {
   DOTACION_SERVICIOS = 'DOTACION_SERVICIOS'
 }
 
+export interface Categoria {
+  id?: number;
+  nombre: string;
+  descripcion?: string;
+  habilitado: boolean;
+  fechaDeshabilitado?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
 // Interfaces
 export interface Rol {
   id: number;
@@ -26,6 +36,8 @@ export interface Rol {
   descripcion?: string;
   permisos: string[];
   activo: boolean;
+  habilitado: boolean;  // Borrado lógico
+  fechaDeshabilitado?: string;  // Fecha y hora del deshabilitado
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -38,6 +50,8 @@ export interface Cliente {
   direccion?: string;
   ciudad?: string;
   nit?: string;
+  habilitado: boolean;  // Borrado lógico
+  fechaDeshabilitado?: string;  // Fecha y hora del deshabilitado
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -53,17 +67,46 @@ export interface Producto {
   stock: number;
   stockMinimo: number;
   imagen?: string;
+  requiereConfeccion: boolean;  // Si el producto necesita ser confeccionado
+  habilitado: boolean;  // Borrado lógico
+  fechaDeshabilitado?: string;  // Fecha y hora del deshabilitado
   createdAt?: Date;
   updatedAt?: Date;
 }
 
 export interface DetallePedido {
   id: number;
+  pedidoId: number;
+  pedido?: Pedido; // Relación con pedido
   productoId: number;
   producto?: Producto;
   cantidad: number;
   precioUnitario: number;
   subtotal: number;
+  estado: EstadoPedido; // Estado individual para cada item del pedido
+}
+
+export interface ItemProduccion {
+  id?: number;
+  // pedidoId removido - ahora se relaciona a través de detalle
+  // pedidoNumero removido - ahora se obtiene a través de detalle.pedido
+  detalleId: number;
+  detalle?: DetallePedido; // Nueva relación principal
+  productoId: number;
+  producto?: Producto;
+  cantidad: number;
+  // estado removido - se lee desde DetallePedido asociado
+  fechaInicio?: Date;
+  fechaEstimadaFinalizacion?: Date;
+  observaciones?: string;
+  habilitado: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+
+  // Campos agregados por el backend para facilitar la visualización
+  numeroPedido?: string;
+  fechaPedido?: string;
+  cliente?: Cliente;
 }
 
 export interface Pedido {
@@ -71,7 +114,7 @@ export interface Pedido {
   clienteId: number;
   cliente?: Cliente;
   numero: string;
-  estado: EstadoPedido;
+  incluirIva: boolean;  // Control para aplicar o no el IVA
   detalles: DetallePedido[];
   subtotal: number;
   impuesto?: number;
@@ -80,6 +123,8 @@ export interface Pedido {
   fechaCreacion: Date;
   fechaEntrega?: Date;
   observaciones?: string;
+  habilitado: boolean;  // Borrado lógico
+  fechaDeshabilitado?: string;  // Fecha y hora del deshabilitado
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -93,6 +138,8 @@ export interface Usuario {
   rolId?: number;
   token?: string;
   activo?: boolean;
+  habilitado: boolean;  // Borrado lógico
+  fechaDeshabilitado?: string;  // Fecha y hora del deshabilitado
   createdAt?: Date;
   updatedAt?: Date;
 }

@@ -1,0 +1,64 @@
+<div class="rol-modal">
+  <h1 mat-dialog-title>{{ tituloModal }}</h1>
+
+  <div mat-dialog-content>
+    <form [formGroup]="formularioRol" class="rol-form">
+      <mat-form-field class="full-width">
+        <mat-label>Nombre del Rol</mat-label>
+        <input matInput formControlName="nombre" placeholder="ej: SUPERVISOR" />
+        <mat-error *ngIf="formularioRol.get('nombre')?.hasError('required')">
+          El nombre del rol es requerido
+        </mat-error>
+        <mat-error *ngIf="formularioRol.get('nombre')?.hasError('minlength')">
+          Debe tener al menos 2 caracteres
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field class="full-width">
+        <mat-label>Descripción</mat-label>
+        <textarea matInput formControlName="descripcion" placeholder="Descripción del rol" rows="3"></textarea>
+      </mat-form-field>
+
+      <div class="permisos-section">
+        <h3>Permisos del Rol</h3>
+        <div class="permisos-grid">
+          <mat-checkbox
+            *ngFor="let permiso of permisosDisponibles"
+            [checked]="isPermisoSeleccionado(permiso)"
+            (change)="togglePermiso(permiso)"
+            class="permiso-checkbox">
+            {{ permiso }}
+          </mat-checkbox>
+        </div>
+        <div class="permisos-seleccionados" *ngIf="permisosSeleccionados.length > 0">
+          <p><strong>Permisos seleccionados ({{ permisosSeleccionados.length }}):</strong></p>
+          <mat-chip-set>
+            <mat-chip *ngFor="let permiso of permisosSeleccionados"
+                      (removed)="togglePermiso(permiso)">
+              {{ permiso }}
+              <mat-icon matChipRemove>cancel</mat-icon>
+            </mat-chip>
+          </mat-chip-set>
+        </div>
+      </div>
+
+      <div class="toggle-container">
+        <mat-slide-toggle formControlName="activo" class="activo-toggle">
+          Rol Activo
+        </mat-slide-toggle>
+      </div>
+    </form>
+  </div>
+
+  <div mat-dialog-actions align="end">
+    <button mat-button (click)="cancelar()">
+      <mat-icon>cancel</mat-icon>
+      Cancelar
+    </button>
+    <button mat-raised-button color="primary" (click)="guardarRol()"
+            [disabled]="formularioRol.invalid">
+      <mat-icon>save</mat-icon>
+      {{ editando ? 'Actualizar' : 'Crear' }}
+    </button>
+  </div>
+</div>

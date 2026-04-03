@@ -1,49 +1,367 @@
+// Estilos para campos de formulario
+mat-form-field {
+  width: 100%;
+  margin-bottom: 16px;
+
+  &.full-width {
+    width: 100%;
+  }
+}
+
+// Estilos específicos para el textarea de observaciones
+mat-form-field textarea {
+  min-height: 60px;
+  resize: vertical;
+}
+
+::ng-deep .formulario-pedido-dialog {
+  .mdc-dialog__surface {
+    max-width: 900px;
+    width: 100%;
+    max-height: 90vh; // Reducido ligeramente para mejor fit
+    height: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .mat-mdc-dialog-container {
+    max-height: 90vh;
+    height: auto;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .mat-mdc-dialog-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 24px;
+    max-height: calc(90vh - 120px); // Reservar espacio para header y footer
+  }
+
+  .mat-mdc-dialog-actions {
+    flex-shrink: 0;
+    padding: 16px 24px;
+    border-top: 1px solid #e0e0e0;
+    justify-content: flex-end;
+  }
+}
+
+.dialog-title-container {
+  padding: 20px 24px 16px 24px;
+  border-bottom: 1px solid #e0e0e0;
+  flex-shrink: 0;
+
+  h1 {
+    margin: 0 0 12px 0;
+    font-size: 24px;
+    font-weight: 500;
+    color: #1a1a1a;
+    letter-spacing: 0.25px;
+  }
+
+  .numero-pedido-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+    border-left: 4px solid #2196f3;
+
+    .label-text {
+      font-size: 14px;
+      color: #666;
+      font-weight: 500;
+    }
+
+    .numero-text {
+      font-size: 16px;
+      color: #2196f3;
+      font-weight: 600;
+      font-family: 'Courier New', monospace;
+    }
+  }
+}
+
+mat-dialog-content {
+  padding: 20px 24px;
+  max-height: calc(95vh - 150px);
+  overflow-y: auto;
+  flex: 1;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+
+    &:hover {
+      background: #999;
+    }
+  }
+}
+
+form {
+  width: 100%;
+}
+
 mat-form-field {
   display: block;
   width: 100%;
-  margin-bottom: 15px;
+  margin-bottom: 16px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
 }
 
 .detalles-section {
-  margin: 20px 0;
+  margin: 24px 0;
 
   h3 {
-    margin-bottom: 15px;
+    margin: 16px 0;
+    font-size: 16px;
+    font-weight: 500;
+    color: #666;
+  }
+
+  .empty-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    background-color: #f9f9f9;
+    border: 2px dashed #ddd;
+    border-radius: 4px;
+    margin-bottom: 16px;
+    color: #999;
+
+    mat-icon {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+      margin-bottom: 16px;
+      color: #ccc;
+    }
+
+    p {
+      margin: 0;
+      font-size: 14px;
+      text-align: center;
+      max-width: 300px;
+    }
+  }
+
+  // Contenedor con scroll para la tabla
+  .tabla-scroll-container {
+    max-height: 300px;
+    overflow-y: auto;
+    overflow-x: auto;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 16px;
+
+    // Scrollbar personalizado
+    &::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 4px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 4px;
+
+      &:hover {
+        background: #a8a8a8;
+      }
+    }
   }
 
   .detalles-tabla {
     width: 100%;
-    margin-bottom: 10px;
+    margin-bottom: 0; // Removido margin porque el contenedor ya tiene spacing
+    border: none; // El borde lo maneja el contenedor
+    border-radius: 0; // El border-radius lo maneja el contenedor
+    min-width: 800px; // Asegurar ancho mínimo para evitar que se comprima demasiado
 
     mat-form-field {
       margin-bottom: 0;
       width: 100%;
+
+      // Asegurar que los form fields no se salgan
+      .mat-mdc-form-field-infix {
+        min-width: 120px;
+      }
     }
 
     td {
-      padding: 8px;
+      padding: 12px 8px;
+      border-right: 1px solid #eee;
+      white-space: nowrap; // Prevenir que el contenido se envuelva
+
+      &:last-child {
+        border-right: none;
+      }
+
+      // Columnas específicas con anchos mínimos
+      &:nth-child(1) { min-width: 200px; } // Producto
+      &:nth-child(2) { min-width: 100px; } // Cantidad
+      &:nth-child(3) { min-width: 120px; } // Precio
+      &:nth-child(4) { min-width: 130px; } // Estado
+      &:nth-child(5) { min-width: 120px; } // Subtotal
+      &:nth-child(6) { min-width: 100px; } // Confección
+      &:nth-child(7) { min-width: 80px; }  // Eliminar
+    }
+
+    th {
+      background-color: #f5f5f5;
+      padding: 12px 8px;
+      text-align: left;
+      font-weight: 500;
+      font-size: 12px;
+      border-right: 1px solid #eee;
+      white-space: nowrap;
+      position: sticky; // Header fijo al hacer scroll
+      top: 0;
+      z-index: 10;
+
+      &:last-child {
+        border-right: none;
+      }
+    }
+
+
+
+    // Selector de estado para cada item
+    .estado-select-item {
+      .mat-mdc-form-field-wrapper {
+        padding: 0;
+      }
+
+      .mat-mdc-select-value {
+        font-size: 12px;
+      }
     }
   }
 
   .btn-agregar {
-    margin-bottom: 20px;
+    margin-bottom: 16px;
   }
 }
 
 .totales {
   display: flex;
-  gap: 15px;
-  margin: 20px 0;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 24px 0;
+  padding: 16px;
+  background-color: #f9f9f9;
+  border-radius: 4px;
 
   mat-form-field {
     flex: 1;
     margin-bottom: 0;
+    min-width: 200px;
+  }
+
+  .iva-control {
+    display: flex;
+    align-items: center;
+    flex-basis: 100%;
+    margin-bottom: 8px;
+
+    mat-checkbox {
+      font-size: 14px;
+
+      ::ng-deep .mdc-checkbox {
+        padding: 4px;
+      }
+
+      ::ng-deep .mdc-form-field {
+        color: #666;
+        font-weight: 500;
+      }
+    }
   }
 }
 
-.botones {
+mat-dialog-actions {
+  padding: 16px 24px 20px 24px;
   display: flex;
-  gap: 10px;
   justify-content: flex-end;
-  margin-top: 20px;
+  gap: 12px;
+  border-top: 1px solid #e0e0e0;
+  flex-shrink: 0;
+}
+
+// Responsive design para pantallas pequeñas
+@media (max-width: 768px) {
+  ::ng-deep .formulario-pedido-dialog {
+    .mdc-dialog__surface {
+      max-width: 95vw;
+      max-height: 85vh;
+    }
+
+    .mat-mdc-dialog-container {
+      max-height: 85vh;
+    }
+
+    .mat-mdc-dialog-content {
+      max-height: calc(85vh - 120px);
+      padding: 0 16px;
+    }
+  }
+
+  .detalles-section {
+    .tabla-scroll-container {
+      max-height: 250px; // Altura menor en móviles
+    }
+
+    .detalles-tabla {
+      min-width: 600px; // Ancho mínimo menor para móviles
+      font-size: 12px;
+
+      td, th {
+        padding: 8px 4px; // Padding menor
+
+        // Ajustar anchos mínimos para móviles
+        &:nth-child(1) { min-width: 150px; } // Producto
+        &:nth-child(2) { min-width: 80px; }  // Cantidad
+        &:nth-child(3) { min-width: 100px; } // Precio
+        &:nth-child(4) { min-width: 110px; } // Estado
+        &:nth-child(5) { min-width: 100px; } // Subtotal
+        &:nth-child(6) { min-width: 80px; }  // Confección
+        &:nth-child(7) { min-width: 60px; }  // Eliminar
+      }
+
+      mat-form-field {
+        .mat-mdc-form-field-infix {
+          min-width: 80px;
+        }
+      }
+    }
+  }
+
+  .totales {
+    gap: 12px;
+    margin: 16px 0;
+    padding: 12px;
+
+    mat-form-field {
+      min-width: 150px;
+    }
+  }
 }

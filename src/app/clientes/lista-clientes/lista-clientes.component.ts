@@ -11,7 +11,7 @@ import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { ClienteService } from '../cliente.service';
 import { Cliente } from '../../shared/models/models';
 import { FormularioClienteComponent } from '../formulario-cliente/formulario-cliente.component';
-import { DialogoConfirmacionComponent } from '../dialogo-confirmacion/dialogo-confirmacion.component';
+import { DialogoService } from '../../shared';
 
 @Component({
   selector: 'app-lista-clientes',
@@ -45,7 +45,8 @@ export class ListaClientesComponent implements OnInit {
 
   constructor(
     private clienteService: ClienteService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private dialogoService: DialogoService
   ) {}
 
   ngOnInit() {
@@ -93,7 +94,10 @@ export class ListaClientesComponent implements OnInit {
 
   abrirFormulario(cliente?: Cliente) {
     const dialogRef = this.dialog.open(FormularioClienteComponent, {
-      width: '500px',
+      width: '600px',
+      maxWidth: '90vw',
+      maxHeight: '90vh',
+      panelClass: 'formulario-cliente-dialog',
       data: cliente || {}
     });
 
@@ -113,12 +117,10 @@ export class ListaClientesComponent implements OnInit {
   }
 
   eliminar(cliente: Cliente) {
-    const dialogRef = this.dialog.open(DialogoConfirmacionComponent, {
-      width: '300px',
-      data: { titulo: 'Eliminar cliente', mensaje: `¿Está seguro de eliminar a ${cliente.nombre}?` }
-    });
-
-    dialogRef.afterClosed().subscribe((confirmado) => {
+    this.dialogoService.confirmarEliminacion(
+      'Eliminar cliente',
+      `¿Está seguro de eliminar a ${cliente.nombre}?`
+    ).subscribe((confirmado) => {
       if (confirmado) {
         this.clienteService.eliminar(cliente.id).subscribe(() => {
           this.cargarClientes();

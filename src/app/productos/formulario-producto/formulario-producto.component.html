@@ -1,6 +1,9 @@
-<h2>{{ data.id ? 'Editar Producto' : 'Nuevo Producto' }}</h2>
+<div mat-dialog-title class="dialog-title-container">
+  <h1>{{ data.id ? 'Editar Producto' : 'Nuevo Producto' }}</h1>
+</div>
 
-<form [formGroup]="formulario">
+<mat-dialog-content>
+  <form [formGroup]="formulario">
   <mat-form-field>
     <mat-label>Nombre</mat-label>
     <input matInput formControlName="nombre" />
@@ -76,16 +79,24 @@
     </mat-error>
   </mat-form-field>
 
+  <div class="checkbox-container">
+    <mat-checkbox formControlName="requiereConfeccion">
+      Requiere Confección
+    </mat-checkbox>
+    <small class="hint-text">Marca esta casilla si el producto necesita proceso de confección</small>
+  </div>
+
   <mat-error *ngIf="formulario.hasError('costoMayorPrecio')">
     El costo no puede ser mayor o igual al precio
   </mat-error>
 </form>
+</mat-dialog-content>
 
-<div class="botones">
-  <button mat-raised-button color="primary" (click)="guardar()" [disabled]="!formulario.valid">
-    Guardar
-  </button>
+<mat-dialog-actions>
   <button mat-raised-button (click)="cancelar()">
     Cancelar
   </button>
-</div>
+  <button mat-raised-button color="primary" (click)="guardar()" [disabled]="!formulario.valid">
+    Guardar
+  </button>
+</mat-dialog-actions>

@@ -65,7 +65,7 @@
       <ng-container matColumnDef="precio">
         <th mat-header-cell *matHeaderCellDef>Precio</th>
         <td mat-cell *matCellDef="let producto">
-          {{ producto.precio | currency : 'COP' : 'symbol' : '1.0-0' }}
+          {{ producto.precio | currency : 'COP' : '$' : '1.0-0' }}
         </td>
       </ng-container>
 
@@ -73,7 +73,7 @@
       <ng-container matColumnDef="costo">
         <th mat-header-cell *matHeaderCellDef>Costo</th>
         <td mat-cell *matCellDef="let producto">
-          {{ producto.costo | currency : 'COP' : 'symbol' : '1.0-0' }}
+          {{ producto.costo | currency : 'COP' : '$' : '1.0-0' }}
         </td>
       </ng-container>
 

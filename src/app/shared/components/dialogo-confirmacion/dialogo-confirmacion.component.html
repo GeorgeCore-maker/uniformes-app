@@ -1,0 +1,26 @@
+<div class="dialogo-header">
+  <div class="titulo-container">
+    <mat-icon *ngIf="data.iconoTitulo" class="icono-titulo">{{ data.iconoTitulo }}</mat-icon>
+    <h2 class="titulo">{{ data.titulo }}</h2>
+  </div>
+</div>
+
+<div class="dialogo-contenido">
+  <p class="mensaje">{{ data.mensaje }}</p>
+</div>
+
+<div class="dialogo-acciones">
+  <button
+    mat-button
+    class="boton-cancelar"
+    (click)="cancelar()">
+    {{ data.textoCancelar }}
+  </button>
+  <button
+    mat-raised-button
+    [color]="data.colorConfirmar"
+    class="boton-confirmar"
+    (click)="confirmar()">
+    {{ data.textoConfirmar }}
+  </button>
+</div>
