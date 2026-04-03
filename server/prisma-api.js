@@ -3,6 +3,7 @@
 
 const express = require('express');
 const cors = require('cors');
+const bcrypt = require('bcrypt');
 const { PrismaClient } = require('@prisma/client');
 
 const app = express();
@@ -959,12 +960,69 @@ app.patch('/api/produccion/:id', async (req, res) => {
   }
 });
 
+// === AUTENTICACIÓN ===
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    console.log('Intento de login:', { username, password: '***' });
+
+    // Buscar usuario por username
+    const user = await prisma.user.findFirst({
+      where: {
+        username: username,
+        habilitado: true
+      }
+    });
+
+    if (!user) {
+      console.log('Usuario no encontrado:', username);
+      return res.status(401).json({
+        error: 'Credenciales inválidas',
+        message: 'Usuario no encontrado'
+      });
+    }
+
+    // Verificar contraseña con bcrypt
+    const passwordMatch = await bcrypt.compare(password, user.password);
+
+    if (!passwordMatch) {
+      console.log('Contraseña incorrecta para usuario:', username);
+      return res.status(401).json({
+        error: 'Credenciales inválidas',
+        message: 'Contraseña incorrecta'
+      });
+    }
+
+    console.log('Login exitoso para usuario:', username);
+
+    // Login exitoso
+    res.json({
+      message: 'Login exitoso',
+      user: {
+        id: user.id,
+        username: user.username,
+        role: user.role,
+        email: user.email,
+        fullName: user.fullName
+      },
+      role: user.role,
+      token: `fake-jwt-token-${user.id}` // En producción usar JWT real
+    });
+
+  } catch (error) {
+    console.error('Error en login:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Manejar rutas no encontradas
 app.use('*', (req, res) => {
   res.status(404).json({
     error: 'Ruta no encontrada',
     available_routes: [
       'GET /api/health - Estado del servidor',
+      'POST /api/auth/login - Autenticación',
       'GET /api/users - Usuarios (CRUD completo)',
       'GET /api/clientes - Clientes (CRUD completo)',
       'GET /api/categorias - Categorías (CRUD completo)',
@@ -987,6 +1045,7 @@ app.listen(PORT, () => {
   console.log(`🔧 DBeaver: Conectar a ${__dirname}/../prisma/uniformes.db`);
   console.log('📊 Endpoints disponibles:');
   console.log('   - GET /api/health       - Estado del servidor');
+  console.log('   - POST /api/auth/login  - Autenticación');
   console.log('   - GET /api/users        - Usuarios');
   console.log('   - GET /api/clientes     - Clientes');
   console.log('   - GET /api/categorias   - Categorías');
