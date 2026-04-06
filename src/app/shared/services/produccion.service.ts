@@ -206,4 +206,53 @@ export class ProduccionService {
       ))
     );
   }
+
+  /**
+   * Crear items de producción desde detalles de pedido
+   */
+  crearItemsDesdeDetallePedido(pedidoId: number, pedidoNumero: string, detalles: any[]): Observable<ItemProduccion[]> {
+    const itemsParaProduccion = detalles
+      .filter(detalle => detalle.estado === EstadoPedido.PENDIENTE || detalle.estado === EstadoPedido.EN_CONFECCION)
+      .map(detalle => ({
+        pedidoId: pedidoId,
+        pedidoNumero: pedidoNumero,
+        detalleId: detalle.id,
+        productoId: detalle.productoId,
+        cantidad: detalle.cantidad,
+        estado: detalle.estado,
+        observaciones: `Item generado automáticamente desde pedido ${pedidoNumero}`,
+        habilitado: true
+      }));
+
+    if (itemsParaProduccion.length === 0) {
+      return new Observable(observer => {
+        observer.next([]);
+        observer.complete();
+      });
+    }
+
+    // Crear todos los items de producción usando el método crear
+    const observables = itemsParaProduccion.map(item => this.crear(item));
+
+    return new Observable(observer => {
+      let completedCount = 0;
+      const results: ItemProduccion[] = [];
+
+      observables.forEach((observable, index) => {
+        observable.subscribe({
+          next: (result) => {
+            results[index] = result;
+            completedCount++;
+            if (completedCount === observables.length) {
+              observer.next(results.filter(r => r !== undefined));
+              observer.complete();
+            }
+          },
+          error: (error) => {
+            observer.error(error);
+          }
+        });
+      });
+    });
+  }
 }

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, switchMap } from 'rxjs/operators';
 import { CrudService, FiltroOptions } from './crud.service';
 import { Pedido, EstadoPedido } from '../models/models';
 
@@ -228,6 +228,53 @@ export class PedidoService {
 
           return true;
         });
+      })
+    );
+  }
+
+  /**
+   * Generar el siguiente número consecutivo de pedido
+   */
+  generarSiguienteNumero(): Observable<string> {
+    return this.obtenerTodosIncluirDeshabilitados().pipe(
+      map(pedidos => {
+        if (pedidos.length === 0) {
+          return 'PED-001';
+        }
+
+        // Extraer números de los pedidos existentes (incluyendo deshabilitados)
+        const numeros = pedidos
+          .map(p => p.numero)
+          .filter(numero => numero && numero.startsWith('PED-'))
+          .map(numero => {
+            const num = numero.split('-')[1];
+            return parseInt(num, 10);
+          })
+          .filter(num => !isNaN(num));
+
+        // Encontrar el número más alto y generar el siguiente
+        const maxNum = Math.max(...numeros);
+        const siguienteNum = maxNum + 1;
+
+        return `PED-${siguienteNum.toString().padStart(3, '0')}`;
+      })
+    );
+  }
+
+  /**
+   * Cambiar estado del pedido
+   */
+  cambiarEstado(id: number, nuevoEstado: EstadoPedido): Observable<Pedido> {
+    return this.obtenerPorId(id).pipe(
+      switchMap((pedido) => {
+        const actualizado = {
+          ...pedido,
+          estado: nuevoEstado,
+          // Preservar fechas de creación si existen
+          fechaCreacion: pedido.fechaCreacion || (pedido as any).createdAt || new Date(),
+          updatedAt: new Date()
+        };
+        return this.actualizar(id, actualizado);
       })
     );
   }

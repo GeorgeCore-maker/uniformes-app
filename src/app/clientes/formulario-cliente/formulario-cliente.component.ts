@@ -1,23 +1,14 @@
 import { Component, Inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { Cliente } from '../../shared/models/models';
+import { SharedModule } from '../../shared/shared.module';
 
 @Component({
   selector: 'app-formulario-cliente',
   standalone: true,
   imports: [
-    CommonModule,
-    FormsModule,
-    ReactiveFormsModule,
-    MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule
+    SharedModule
   ],
   templateUrl: './formulario-cliente.component.html',
   styleUrl: './formulario-cliente.component.scss'

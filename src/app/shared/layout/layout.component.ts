@@ -1,13 +1,7 @@
 import { Component, OnInit, ViewChild, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { MatSidenavModule, MatSidenav } from '@angular/material/sidenav';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatListModule } from '@angular/material/list';
-import { MatMenuModule } from '@angular/material/menu';
-import { MatExpansionModule } from '@angular/material/expansion';
+import { MatSidenav } from '@angular/material/sidenav';
 import { RouterModule, Router } from '@angular/router';
+import { SharedModule } from '../shared.module';
 import { AuthService } from '../../auth/auth.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -24,14 +18,7 @@ interface NavLink {
   selector: 'app-layout',
   standalone: true,
   imports: [
-    CommonModule,
-    MatSidenavModule,
-    MatToolbarModule,
-    MatButtonModule,
-    MatIconModule,
-    MatListModule,
-    MatMenuModule,
-    MatExpansionModule,
+    SharedModule,
     RouterModule
   ],
   templateUrl: './layout.component.html',

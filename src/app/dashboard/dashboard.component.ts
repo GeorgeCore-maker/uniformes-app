@@ -1,25 +1,16 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterModule } from '@angular/router';
+import { SharedModule } from '../shared/shared.module';
 import { forkJoin } from 'rxjs';
-import { ClienteService } from '../clientes/cliente.service';
-import { ProductoService } from '../productos/producto.service';
-import { PedidoService } from '../pedidos/pedido.service';
-import { EstadoPedido } from '../shared/models/models';
+import { ClienteService } from '../shared/services/cliente.service';
+import { ProductoService } from '../shared/services/producto.service';
+import { PedidoService } from '../shared/services/pedido.service';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
   imports: [
-    CommonModule,
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
-    MatTooltipModule,
+    SharedModule,
     RouterModule
   ],
   templateUrl: './dashboard.component.html',

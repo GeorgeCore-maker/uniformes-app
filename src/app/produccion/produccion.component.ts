@@ -1,35 +1,17 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { MatTableModule } from '@angular/material/table';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatSelectModule } from '@angular/material/select';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatPaginatorModule } from '@angular/material/paginator';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
-import { ProduccionService } from './produccion.service';
-import { ProductoService } from '../productos/producto.service';
-import { ClienteService } from '../clientes/cliente.service';
+import { ProduccionService } from '../shared/services/produccion.service';
+import { ProductoService } from '../shared/services/producto.service';
+import { ClienteService } from '../shared/services/cliente.service';
 import { EventosService } from '../shared/services/eventos.service';
 import { ItemProduccion, EstadoPedido, Producto, Cliente } from '../shared/models/models';
+import { SharedModule } from '../shared/shared.module';
 
 @Component({
   selector: 'app-produccion',
   standalone: true,
   imports: [
-    CommonModule,
-    MatTableModule,
-    MatButtonModule,
-    MatIconModule,
-    MatChipsModule,
-    MatSelectModule,
-    MatFormFieldModule,
-    MatPaginatorModule,
-    MatTooltipModule,
-    FormsModule
+    SharedModule
   ],
   templateUrl: './produccion.component.html',
   styleUrl: './produccion.component.scss'
@@ -155,7 +137,7 @@ export class ProduccionComponent implements OnInit, OnDestroy {
       ? EstadoPedido.EN_CONFECCION
       : EstadoPedido.TERMINADO;
 
-    this.produccionService.cambiarEstado(item.id, nuevoEstado).subscribe({
+    this.produccionService.cambiarEstado(item, nuevoEstado).subscribe({
       next: (itemActualizado) => {
         // Recargar todos los datos para asegurar consistencia
         this.cargarItemsProduccion();

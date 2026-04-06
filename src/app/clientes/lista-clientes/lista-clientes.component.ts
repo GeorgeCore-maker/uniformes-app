@@ -1,32 +1,17 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MatTableModule } from '@angular/material/table';
-import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatDialogModule, MatDialog } from '@angular/material/dialog';
-import { ClienteService } from '../cliente.service';
+import { PageEvent } from '@angular/material/paginator';
+import { MatDialog } from '@angular/material/dialog';
+import { ClienteService } from '../../shared/services/cliente.service';
 import { Cliente } from '../../shared/models/models';
 import { FormularioClienteComponent } from '../formulario-cliente/formulario-cliente.component';
-import { DialogoService } from '../../shared';
+import { DialogoService } from '../../shared/services/dialogo.service';
+import { SharedModule } from '../../shared/shared.module';
 
 @Component({
   selector: 'app-lista-clientes',
   standalone: true,
   imports: [
-    CommonModule,
-    FormsModule,
-    ReactiveFormsModule,
-    MatTableModule,
-    MatPaginatorModule,
-    MatButtonModule,
-    MatIconModule,
-    MatInputModule,
-    MatFormFieldModule,
-    MatDialogModule
+    SharedModule
   ],
   templateUrl: './lista-clientes.component.html',
   styleUrl: './lista-clientes.component.scss'

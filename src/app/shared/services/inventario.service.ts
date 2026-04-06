@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map, switchMap } from 'rxjs';
-import { Producto } from '../shared/models/models';
+import { Producto } from '../models/models';
 
 export interface ProductoInventario {
   id: number;

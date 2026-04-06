@@ -1,34 +1,17 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MatTableModule } from '@angular/material/table';
-import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatDialogModule, MatDialog } from '@angular/material/dialog';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { CategoriaService } from '../categoria.service';
+import { PageEvent } from '@angular/material/paginator';
+import { MatDialog } from '@angular/material/dialog';
+import { CategoriaService } from '../../shared/services/categoria.service';
 import { Categoria } from '../../shared/models/models';
 import { FormularioCategoriaComponent } from '../formulario-categoria/formulario-categoria.component';
 import { DialogoService } from '../../shared/services/dialogo.service';
+import { SharedModule } from '../../shared/shared.module';
 
 @Component({
   selector: 'app-lista-categorias',
   standalone: true,
   imports: [
-    CommonModule,
-    FormsModule,
-    ReactiveFormsModule,
-    MatTableModule,
-    MatPaginatorModule,
-    MatButtonModule,
-    MatIconModule,
-    MatInputModule,
-    MatFormFieldModule,
-    MatDialogModule,
-    MatTooltipModule
+    SharedModule
   ],
   templateUrl: './lista-categorias.component.html',
   styleUrl: './lista-categorias.component.scss'

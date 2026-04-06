@@ -1,31 +1,16 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
-import { PedidoService } from '../../pedidos/pedido.service';
-import { VentasFilterService, RangoFechas, EstadisticasVentas } from '../../core/services/ventas-filter.service';
+import { FormBuilder, FormGroup } from '@angular/forms';
+import { PedidoService } from '../../shared/services/pedido.service';
+import { VentasFilterService, EstadisticasVentas } from '../../core/services/ventas-filter.service';
 import { Pedido } from '../../shared/models/models';
 import { NotificationService } from '../../core/services/notification.service';
+import { SharedModule } from '../../shared/shared.module';
 
 @Component({
   selector: 'app-dashboard-ventas',
   standalone: true,
   imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatIconModule,
-    MatDatepickerModule,
-    MatNativeDateModule
+    SharedModule
   ],
   templateUrl: './dashboard-ventas.component.html',
   styleUrl: './dashboard-ventas.component.scss'

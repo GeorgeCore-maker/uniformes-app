@@ -1,29 +1,14 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
 import { AuthService } from '../auth.service';
 import { Router, ActivatedRoute } from '@angular/router';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
-import { MatButtonModule } from '@angular/material/button';
-import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatCardModule } from '@angular/material/card';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { SharedModule } from '../../shared/shared.module';
 
 @Component({
   selector: 'app-login',
   standalone: true,
   imports: [
-    CommonModule,
-    FormsModule,
-    RouterModule,
-    MatSnackBarModule,
-    MatButtonModule,
-    MatInputModule,
-    MatFormFieldModule,
-    MatCardModule,
-    MatProgressSpinnerModule
+    SharedModule
   ],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
@@ -33,6 +18,7 @@ export class LoginComponent implements OnInit {
   password = '';
   loading = false;
   errorMessage = '';
+  hidePassword = true;
 
   constructor(
     private authService: AuthService,
@@ -77,5 +63,9 @@ export class LoginComponent implements OnInit {
       duration: 5000,
       panelClass: ['error-snackbar']
     });
+  }
+
+  togglePasswordVisibility() {
+    this.hidePassword = !this.hidePassword;
   }
 }

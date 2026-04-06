@@ -24,10 +24,15 @@
 <mat-sidenav-container class="sidenav-container">
   <mat-sidenav #sidenav class="sidenav" [mode]="isMobile ? 'over' : 'side'" [opened]="!isMobile">
     <mat-toolbar color="primary" class="sidenav-header">
-      <span>UNIFORMES</span>
+      <span>MENÚ</span>
     </mat-toolbar>
     <mat-nav-list>
-      <mat-list-item *ngFor="let link of navLinksFiltered" [routerLink]="link.route" (click)="closeSidenav()">
+      <mat-list-item
+        *ngFor="let link of navLinksFiltered"
+        [routerLink]="link.route"
+        routerLinkActive="active-menu-item"
+        [routerLinkActiveOptions]="{exact: false}"
+        (click)="closeSidenav()">
         <mat-icon matListItemIcon>{{ link.icon }}</mat-icon>
         <span matListItemTitle>{{ link.label }}</span>
       </mat-list-item>
