@@ -1,8 +1,6 @@
 import { Component, Inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { SharedModule } from '../../shared.module';
 
 export interface DialogoConfirmacionData {
   titulo: string;
@@ -17,10 +15,7 @@ export interface DialogoConfirmacionData {
   selector: 'app-dialogo-confirmacion',
   standalone: true,
   imports: [
-    CommonModule,
-    MatDialogModule,
-    MatButtonModule,
-    MatIconModule
+    SharedModule
   ],
   templateUrl: './dialogo-confirmacion.component.html',
   styleUrl: './dialogo-confirmacion.component.scss'

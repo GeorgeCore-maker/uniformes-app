@@ -1,35 +1,17 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { MatTableModule } from '@angular/material/table';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatSelectModule } from '@angular/material/select';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatPaginatorModule } from '@angular/material/paginator';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
-import { ProduccionService } from './produccion.service';
-import { ProductoService } from '../productos/producto.service';
-import { ClienteService } from '../clientes/cliente.service';
+import { ProduccionService } from '../shared/services/produccion.service';
+import { ProductoService } from '../shared/services/producto.service';
+import { ClienteService } from '../shared/services/cliente.service';
 import { EventosService } from '../shared/services/eventos.service';
 import { ItemProduccion, EstadoPedido, Producto, Cliente } from '../shared/models/models';
+import { SharedModule } from '../shared/shared.module';
 
 @Component({
   selector: 'app-produccion',
   standalone: true,
   imports: [
-    CommonModule,
-    MatTableModule,
-    MatButtonModule,
-    MatIconModule,
-    MatChipsModule,
-    MatSelectModule,
-    MatFormFieldModule,
-    MatPaginatorModule,
-    MatTooltipModule,
-    FormsModule
+    SharedModule
   ],
   templateUrl: './produccion.component.html',
   styleUrl: './produccion.component.scss'
@@ -68,18 +50,8 @@ export class ProduccionComponent implements OnInit, OnDestroy {
   private suscribirseAEventos() {
     // Escuchar actualizaciones de pedidos
     this.eventosSubscription = this.eventosService.pedidoActualizado$.subscribe(() => {
-      console.log('Pedido actualizado, recargando items de producción...');
       this.cargarItemsProduccion();
     });
-
-    // También recargar cuando cambien los productos (para requiereConfeccion)
-    // Esto se activará cuando se actualice un producto desde inventario
-    this.eventosSubscription.add(
-      this.productoService.obtenerTodos().subscribe(() => {
-        console.log('Productos actualizados, recargando datos de producción...');
-        this.cargarDatos(); // Recargar tanto productos como items
-      })
-    );
   }
 
   private cargarDatos() {
@@ -97,7 +69,6 @@ export class ProduccionComponent implements OnInit, OnDestroy {
   private cargarItemsProduccion() {
     this.produccionService.obtenerTodos().subscribe({
       next: (items) => {
-        console.log('Items recibidos de producción:', items); // Debug
 
         // Filtrar items que deben aparecer en producción
         this.items = items.filter(item => {
@@ -122,7 +93,6 @@ export class ProduccionComponent implements OnInit, OnDestroy {
           return esEstadoValido;
         });
 
-        console.log('Items filtrados:', this.items); // Debug
         this.actualizarFiltro();
       },
       error: (error) => {
@@ -155,13 +125,17 @@ export class ProduccionComponent implements OnInit, OnDestroy {
       ? EstadoPedido.EN_CONFECCION
       : EstadoPedido.TERMINADO;
 
-    this.produccionService.cambiarEstado(item.id, nuevoEstado).subscribe({
+    this.produccionService.cambiarEstado(item, nuevoEstado).subscribe({
       next: (itemActualizado) => {
         // Recargar todos los datos para asegurar consistencia
         this.cargarItemsProduccion();
 
+        // Emitir evento para sincronizar con pedidos
+        if (item.id && item.detalleId) {
+          this.eventosService.emitirProduccionActualizada(item.id, item.detalleId, nuevoEstado);
+        }
+
         // Mostrar mensaje de éxito
-        console.log(`Estado actualizado a ${nuevoEstado} para el item de ${this.getProductoNombre(item.productoId)}`);
       },
       error: (error) => {
         console.error('Error al cambiar estado:', error);

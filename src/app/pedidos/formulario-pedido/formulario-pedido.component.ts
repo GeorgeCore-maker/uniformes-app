@@ -1,36 +1,20 @@
 import { Component, Inject, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormArray, FormControl } from '@angular/forms';
-import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatSelectModule } from '@angular/material/select';
-import { MatTableModule } from '@angular/material/table';
+import { FormBuilder, FormGroup, Validators, FormArray, FormControl } from '@angular/forms';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
-import { MatIconModule } from '@angular/material/icon';
-import { MatCheckboxModule } from '@angular/material/checkbox';
 import { Pedido, Producto, Cliente, EstadoPedido } from '../../shared/models/models';
-import { ProductoService } from '../../productos/producto.service';
-import { ClienteService } from '../../clientes/cliente.service';
-import { PedidoService } from '../pedido.service';
-import { ProduccionService } from '../../produccion/produccion.service';
+import { ProductoService } from '../../shared/services/producto.service';
+import { ClienteService } from '../../shared/services/cliente.service';
+import { PedidoService } from '../../shared/services/pedido.service';
+import { ProduccionService } from '../../shared/services/produccion.service';
+import { EventosService } from '../../shared/services/eventos.service';
+import { SharedModule } from '../../shared/shared.module';
 
 @Component({
   selector: 'app-formulario-pedido',
   standalone: true,
   imports: [
-    CommonModule,
-    FormsModule,
-    ReactiveFormsModule,
-    MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatSelectModule,
-    MatTableModule,
-    MatIconModule,
-    MatCheckboxModule
+    SharedModule
   ],
   templateUrl: './formulario-pedido.component.html',
   styleUrl: './formulario-pedido.component.scss'
@@ -51,7 +35,8 @@ export class FormularioPedidoComponent implements OnInit {
     private productoService: ProductoService,
     private clienteService: ClienteService,
     private pedidoService: PedidoService,
-    private produccionService: ProduccionService
+    private produccionService: ProduccionService,
+    private eventosService: EventosService
   ) {
     this.formulario = this.fb.group({
       numero: [data?.numero || '', Validators.required],

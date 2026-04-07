@@ -1,14 +1,12 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { RouterModule, Router, ActivatedRoute, NavigationEnd } from '@angular/router';
-import { MatTabsModule } from '@angular/material/tabs';
-import { MatIconModule } from '@angular/material/icon';
+import { Router, ActivatedRoute, NavigationEnd } from '@angular/router';
+import { SharedModule } from '../shared/shared.module';
 import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-administracion',
   standalone: true,
-  imports: [CommonModule, RouterModule, MatTabsModule, MatIconModule],
+  imports: [SharedModule],
   templateUrl: './administracion.component.html',
   styleUrls: ['./administracion.component.scss']
 })

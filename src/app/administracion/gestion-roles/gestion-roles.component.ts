@@ -1,15 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { MatTableModule } from '@angular/material/table';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatDialogModule, MatDialog } from '@angular/material/dialog';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatCardModule } from '@angular/material/card';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialog } from '@angular/material/dialog';
+import { SharedModule } from '../../shared/shared.module';
 import { RolService } from '../../core/services/rol.service';
 import { NotificationService } from '../../core/services/notification.service';
-import { DialogoService } from '../../shared';
+import { DialogoService } from '../../shared/services/dialogo.service';
 import { Rol } from '../../shared/models/models';
 import { RolesModalComponent } from './roles-modal/roles-modal.component';
 
@@ -17,14 +11,7 @@ import { RolesModalComponent } from './roles-modal/roles-modal.component';
   selector: 'app-gestion-roles',
   standalone: true,
   imports: [
-    CommonModule,
-    MatTableModule,
-    MatButtonModule,
-    MatIconModule,
-    MatDialogModule,
-    MatChipsModule,
-    MatCardModule,
-    MatTooltipModule
+    SharedModule
   ],
   templateUrl: './gestion-roles.component.html',
   styleUrl: './gestion-roles.component.scss'
@@ -48,7 +35,7 @@ export class GestionRolesComponent implements OnInit {
     this.rolService.obtenerTodos().subscribe({
       next: (roles: Rol[]) => {
         this.roles = roles;
-        console.log('Roles cargados:', this.roles);
+        // console.log('Roles cargados:', this.roles);
         this.notificationService.success('Roles cargados correctamente');
       },
       error: (error: any) => {

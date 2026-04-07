@@ -46,7 +46,7 @@ export class ExportService {
     infoY += lineHeight;
     doc.text(`Estado: ${this.obtenerEstadoPedido(pedido)}`, infoX, infoY);
     infoY += lineHeight;
-    doc.text(`Observaciones: ${pedido.observaciones || 'N/A'}`, infoX, infoY);
+    doc.text(`Observaciones: ${pedido.observaciones || 'Sin observaciones'}`, infoX, infoY);
 
     // Información del cliente
     infoY += 10;
@@ -55,18 +55,24 @@ export class ExportService {
 
     doc.setFont('helvetica', 'normal');
     infoY += 7;
-    if (cliente) {
-      doc.text(`Nombre: ${cliente.nombre}`, infoX, infoY);
+
+    // Obtener cliente del pedido si no se pasó como parámetro
+    const clienteInfo = cliente || pedido.cliente;
+
+    if (clienteInfo) {
+      doc.text(`Nombre: ${clienteInfo.nombre || 'N/A'}`, infoX, infoY);
       infoY += lineHeight;
-      doc.text(`Teléfono: ${cliente.telefono}`, infoX, infoY);
+      doc.text(`Teléfono: ${clienteInfo.telefono || 'N/A'}`, infoX, infoY);
       infoY += lineHeight;
-      doc.text(`Email: ${cliente.email || 'N/A'}`, infoX, infoY);
+      doc.text(`Email: ${clienteInfo.email || 'N/A'}`, infoX, infoY);
       infoY += lineHeight;
-      doc.text(`NIT: ${cliente.nit || 'N/A'}`, infoX, infoY);
+      doc.text(`NIT: ${clienteInfo.nit || 'N/A'}`, infoX, infoY);
+    } else {
+      doc.text('No hay información del cliente disponible', infoX, infoY);
     }
 
     // Tabla de detalles
-    infoY += 10;
+    infoY += 15; // Más espacio antes de la tabla
     doc.setFont('helvetica', 'bold');
     doc.text('DETALLES DEL PEDIDO', 15, infoY);
 
@@ -74,11 +80,16 @@ export class ExportService {
     tableData.push(['Producto ID', 'Cantidad', 'Precio Unitario', 'Subtotal']);
 
     pedido.detalles.forEach((detalle: DetallePedido) => {
+      // Calcular subtotal correctamente
+      const cantidad = Number(detalle.cantidad) || 0;
+      const precioUnitario = Number(detalle.precioUnitario) || 0;
+      const subtotalCalculado = cantidad * precioUnitario;
+
       tableData.push([
         detalle.productoId.toString(),
         detalle.cantidad.toString(),
-        this.formatearMoneda(detalle.precioUnitario),
-        this.formatearMoneda(detalle.subtotal)
+        this.formatearMoneda(precioUnitario),
+        this.formatearMoneda(subtotalCalculado)
       ]);
     });
 
@@ -100,7 +111,7 @@ export class ExportService {
 
     // Datos de tabla
     doc.setTextColor(...colorTextoGris);
-    infoY += 7;
+    infoY += 10; // Más espacio después del encabezado para evitar superposición
     let currentY = infoY;
 
     tableData.slice(1).forEach((row) => {
@@ -119,7 +130,7 @@ export class ExportService {
     });
 
     // Resumen
-    currentY += 5;
+    currentY += 10; // Más espacio antes del resumen
     if (currentY > pageHeight - 30) {
       doc.addPage();
       currentY = 20;
@@ -129,18 +140,29 @@ export class ExportService {
     doc.setFontSize(10);
 
     const resumenX = 130;
-    doc.text(`Subtotal: ${this.formatearMoneda(pedido.subtotal)}`, resumenX, currentY);
-    currentY += 7;
 
-    if (pedido.impuesto) {
-      doc.text(`Impuesto: ${this.formatearMoneda(pedido.impuesto)}`, resumenX, currentY);
+    // Lógica según si incluye IVA o no
+    if (pedido.incluirIva) {
+      // Si incluye IVA, mostrar subtotal + impuesto = total
+      doc.text(`Subtotal: ${this.formatearMoneda(pedido.subtotal)}`, resumenX, currentY);
       currentY += 7;
-    }
 
-    doc.setFillColor(41, 128, 185);
-    doc.setTextColor(255, 255, 255);
-    doc.rect(resumenX - 10, currentY, 70, 10, 'F');
-    doc.text(`Total: ${this.formatearMoneda(pedido.total)}`, resumenX, currentY + 7);
+      if (pedido.impuesto) {
+        doc.text(`Impuesto: ${this.formatearMoneda(pedido.impuesto)}`, resumenX, currentY);
+        currentY += 7;
+      }
+
+      doc.setFillColor(41, 128, 185);
+      doc.setTextColor(255, 255, 255);
+      doc.rect(resumenX - 10, currentY - 2, 70, 10, 'F');
+      doc.text(`Total: ${this.formatearMoneda(pedido.total)}`, resumenX, currentY + 5);
+    } else {
+      // Si NO incluye IVA, mostrar solo el total
+      doc.setFillColor(41, 128, 185);
+      doc.setTextColor(255, 255, 255);
+      doc.rect(resumenX - 10, currentY - 2, 70, 10, 'F');
+      doc.text(`Total: ${this.formatearMoneda(pedido.total)}`, resumenX, currentY + 5);
+    }
 
     // Pie de página
     doc.setTextColor(150, 150, 150);
@@ -167,13 +189,21 @@ export class ExportService {
     const datosExcel: any[] = [];
 
     pedidos.forEach((pedido: Pedido) => {
+      // Calcular el impuesto correctamente
+      let impuestoCalculado = 0;
+      if (pedido.incluirIva) {
+        // Si incluye IVA, el impuesto es la diferencia entre total y subtotal
+        impuestoCalculado = pedido.total - pedido.subtotal;
+      }
+
       datosExcel.push({
         'Número': pedido.numero,
-        'Cliente ID': pedido.clienteId,
+        'Cliente': pedido.cliente?.nombre || 'N/A',
         'Estado': this.obtenerEstadoPedido(pedido),
         'Subtotal': pedido.subtotal,
-        'Impuesto': pedido.impuesto || 0,
+        'Impuesto': impuestoCalculado,
         'Total': pedido.total,
+        'Incluye IVA': pedido.incluirIva ? 'Sí' : 'No',
         'Fecha Creación': this.formatearFecha(pedido.fechaCreacion),
         'Fecha Entrega': pedido.fechaEntrega ? this.formatearFecha(pedido.fechaEntrega) : 'N/A',
         'Observaciones': pedido.observaciones || ''
@@ -186,15 +216,16 @@ export class ExportService {
 
     // Ajustar ancho de columnas
     const columnWidths = [
-      { wch: 15 },
-      { wch: 12 },
-      { wch: 15 },
-      { wch: 12 },
-      { wch: 12 },
-      { wch: 12 },
-      { wch: 18 },
-      { wch: 18 },
-      { wch: 30 }
+      { wch: 15 },  // Número
+      { wch: 20 },  // Cliente (nombre completo)
+      { wch: 15 },  // Estado
+      { wch: 12 },  // Subtotal
+      { wch: 12 },  // Impuesto
+      { wch: 12 },  // Total
+      { wch: 12 },  // Incluye IVA
+      { wch: 18 },  // Fecha Creación
+      { wch: 18 },  // Fecha Entrega
+      { wch: 30 }   // Observaciones
     ];
     worksheet['!cols'] = columnWidths;
 

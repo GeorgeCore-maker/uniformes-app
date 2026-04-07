@@ -1,8 +1,8 @@
 import { Component } from '@angular/core';
 import { ListaProductosComponent } from './lista-productos/lista-productos.component';
 import { ListaCategoriasComponent } from './lista-categorias/lista-categorias.component';
-import { MatTabsModule } from '@angular/material/tabs';
-import { MatIconModule } from '@angular/material/icon';
+
+import { SharedModule } from '../shared/shared.module';
 
 @Component({
   selector: 'app-productos',
@@ -10,8 +10,7 @@ import { MatIconModule } from '@angular/material/icon';
   imports: [
     ListaProductosComponent,
     ListaCategoriasComponent,
-    MatTabsModule,
-    MatIconModule
+    SharedModule
   ],
   templateUrl: './productos.component.html',
   styleUrl: './productos.component.scss'

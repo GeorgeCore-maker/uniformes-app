@@ -1,25 +1,16 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterModule } from '@angular/router';
+import { SharedModule } from '../shared/shared.module';
 import { forkJoin } from 'rxjs';
-import { ClienteService } from '../clientes/cliente.service';
-import { ProductoService } from '../productos/producto.service';
-import { PedidoService } from '../pedidos/pedido.service';
-import { EstadoPedido } from '../shared/models/models';
+import { ClienteService } from '../shared/services/cliente.service';
+import { ProductoService } from '../shared/services/producto.service';
+import { PedidoService } from '../shared/services/pedido.service';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
   imports: [
-    CommonModule,
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
-    MatTooltipModule,
+    SharedModule,
     RouterModule
   ],
   templateUrl: './dashboard.component.html',
@@ -52,7 +43,6 @@ export class DashboardComponent implements OnInit {
       pedidos: this.pedidoService.obtenerTodos()
     }).subscribe({
       next: (datos) => {
-        console.log('Datos recibidos:', datos); // Debug log
 
         // Contar totales - ser más permisivo con el filtrado
         this.totalClientes = datos.clientes.filter(cliente => {
@@ -91,21 +81,6 @@ export class DashboardComponent implements OnInit {
 
           return false;
         }).length;
-
-        console.log('Estadísticas calculadas:', {
-          clientes: this.totalClientes,
-          productos: this.totalProductos,
-          pedidos: this.totalPedidos,
-          pendientes: this.pedidosPendientes
-        });
-
-        // Log detallado de clientes para debug
-        console.log('Detalle de clientes:', datos.clientes.map(c => ({
-          id: c.id,
-          nombre: c.nombre,
-          habilitado: c.habilitado,
-          incluido: c.habilitado !== false
-        })));
 
         this.cargandoDatos = false;
       },

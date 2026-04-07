@@ -1,48 +1,24 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
-import { MatTableModule } from '@angular/material/table';
-import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatDialogModule, MatDialog } from '@angular/material/dialog';
-import { MatSelectModule } from '@angular/material/select';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
+import { FormBuilder, FormGroup } from '@angular/forms';
+import { PageEvent } from '@angular/material/paginator';
+import { MatDialog } from '@angular/material/dialog';
 import { Subscription } from 'rxjs';
-import { PedidoService } from '../pedido.service';
+import { PedidoService } from '../../shared/services/pedido.service';
 import { Pedido, EstadoPedido } from '../../shared/models/models';
 import { FormularioPedidoComponent } from '../formulario-pedido/formulario-pedido.component';
-import { DialogoService } from '../../shared';
+import { DialogoService } from '../../shared/services/dialogo.service';
+import { SharedModule } from '../../shared/shared.module';
 import { ExportService } from '../../core/services/export.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { VentasFilterService, RangoFechas } from '../../core/services/ventas-filter.service';
-import { ProduccionService } from '../../produccion/produccion.service';
+import { ProduccionService } from '../../shared/services/produccion.service';
 import { EventosService } from '../../shared/services/eventos.service';
 
 @Component({
   selector: 'app-lista-pedidos',
   standalone: true,
   imports: [
-    CommonModule,
-    FormsModule,
-    ReactiveFormsModule,
-    MatTableModule,
-    MatPaginatorModule,
-    MatButtonModule,
-    MatIconModule,
-    MatInputModule,
-    MatFormFieldModule,
-    MatDialogModule,
-    MatSelectModule,
-    MatChipsModule,
-    MatTooltipModule,
-    MatDatepickerModule,
-    MatNativeDateModule
+    SharedModule
   ],
   templateUrl: './lista-pedidos.component.html',
   styleUrl: './lista-pedidos.component.scss'
@@ -100,7 +76,6 @@ export class ListaPedidosComponent implements OnInit, OnDestroy {
   suscribirseAEventos() {
     // Escuchar actualizaciones de producción
     this.eventosSubscription = this.eventosService.produccionActualizada$.subscribe(() => {
-      console.log('Estado de producción actualizado, recargando pedidos...');
       this.cargarPedidos();
     });
   }
@@ -283,7 +258,8 @@ export class ListaPedidosComponent implements OnInit, OnDestroy {
   // Métodos de exportación
   exportarPedidoAPdf(pedido: Pedido) {
     try {
-      this.exportService.exportarPedidoAPdf(pedido);
+      // Pasar el pedido completo con su información de cliente
+      this.exportService.exportarPedidoAPdf(pedido, pedido.cliente);
       this.notificationService.success(`Pedido ${pedido.numero} exportado a PDF`);
     } catch (error) {
       console.error('Error al exportar PDF:', error);
@@ -338,6 +314,9 @@ export class ListaPedidosComponent implements OnInit, OnDestroy {
             next: (pedidoActualizado) => {
               this.notificationService.success('Pedido actualizado correctamente');
               this.cargarPedidos();
+
+              // Emitir evento de actualización para sincronizar con producción
+              this.eventosService.emitirPedidoActualizado(pedido.id);
             },
             error: (error) => {
               console.error('Error al actualizar:', error);
@@ -355,6 +334,9 @@ export class ListaPedidosComponent implements OnInit, OnDestroy {
               }
 
               this.cargarPedidos();
+
+              // Emitir evento de creación para sincronizar con producción
+              this.eventosService.emitirPedidoActualizado(pedidoCreado.id);
             },
             error: (error) => {
               console.error('Error al crear:', error);

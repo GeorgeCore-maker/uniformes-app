@@ -1,15 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { MatTableModule } from '@angular/material/table';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatDialogModule, MatDialog } from '@angular/material/dialog';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatCardModule } from '@angular/material/card';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialog } from '@angular/material/dialog';
+import { SharedModule } from '../../shared/shared.module';
 import { UsuarioService } from '../../core/services/usuario.service';
 import { NotificationService } from '../../core/services/notification.service';
-import { DialogoService } from '../../shared';
+import { DialogoService } from '../../shared/services/dialogo.service';
 import { Usuario } from '../../shared/models/models';
 import { UsuariosModalComponent } from './usuarios-modal/usuarios-modal.component';
 
@@ -17,14 +11,7 @@ import { UsuariosModalComponent } from './usuarios-modal/usuarios-modal.componen
   selector: 'app-gestion-usuarios',
   standalone: true,
   imports: [
-    CommonModule,
-    MatTableModule,
-    MatButtonModule,
-    MatIconModule,
-    MatDialogModule,
-    MatChipsModule,
-    MatCardModule,
-    MatTooltipModule
+    SharedModule
   ],
   templateUrl: './gestion-usuarios.component.html',
   styleUrl: './gestion-usuarios.component.scss'
@@ -48,7 +35,6 @@ export class GestionUsuariosComponent implements OnInit {
     this.usuarioService.obtenerTodos().subscribe({
       next: (usuarios: Usuario[]) => {
         this.usuarios = usuarios;
-        console.log('Usuarios cargados:', this.usuarios);
         this.notificationService.success('Usuarios cargados correctamente');
       },
       error: (error: any) => {

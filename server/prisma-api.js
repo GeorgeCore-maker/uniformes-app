@@ -507,6 +507,8 @@ app.post('/api/pedidos', async (req, res) => {
 
 app.put('/api/pedidos/:id', async (req, res) => {
   try {
+    const pedidoId = parseInt(req.params.id);
+
     // Filtrar solo los campos permitidos para actualización
     const allowedFields = [
       'clienteId',
@@ -538,19 +540,33 @@ app.put('/api/pedidos/:id', async (req, res) => {
     let pedido;
 
     if (detalles && detalles.length > 0) {
-      // Si hay detalles, primero eliminar los existentes y crear los nuevos
-      await prisma.detallePedido.deleteMany({
-        where: { pedidoId: parseInt(req.params.id) }
+      // PASO 1: Eliminar items de producción relacionados con los detalles antiguos
+      const detallesAntiguos = await prisma.detallePedido.findMany({
+        where: { pedidoId: pedidoId },
+        select: { id: true }
       });
 
-      // Convertir precioUnitario a string para que coincida con el schema
+      if (detallesAntiguos.length > 0) {
+        const idsDetallesAntiguos = detallesAntiguos.map(d => d.id);
+        await prisma.itemProduccion.deleteMany({
+          where: { detalleId: { in: idsDetallesAntiguos } }
+        });
+      }
+
+      // PASO 2: Eliminar los detalles antiguos
+      await prisma.detallePedido.deleteMany({
+        where: { pedidoId: pedidoId }
+      });
+
+      // PASO 3: Convertir precioUnitario a string para que coincida con el schema
       const detallesConvertidos = detalles.map(detalle => ({
         ...detalle,
         precioUnitario: detalle.precioUnitario.toString()
       }));
 
+      // PASO 4: Actualizar pedido con los nuevos detalles
       pedido = await prisma.pedido.update({
-        where: { id: parseInt(req.params.id) },
+        where: { id: pedidoId },
         data: {
           ...pedidoData,
           detalles: {
@@ -559,13 +575,42 @@ app.put('/api/pedidos/:id', async (req, res) => {
         },
         include: {
           cliente: true,
+          detalles: {
+            include: {
+              producto: true
+            }
+          }
+        }
+      });
+
+      // PASO 5: Crear items de producción para detalles que requieren confección
+      for (const detalle of pedido.detalles) {
+        // Solo crear item si el producto requiere confección
+        if (detalle.producto?.requiereConfeccion) {
+          await prisma.itemProduccion.create({
+            data: {
+              detalleId: detalle.id,
+              productoId: detalle.productoId,
+              cantidad: detalle.cantidad,
+              fechaInicio: new Date(),
+              habilitado: true
+            }
+          });
+        }
+      }
+
+      // PASO 6: Recargar el pedido con todos los datos actualizados
+      pedido = await prisma.pedido.findUnique({
+        where: { id: pedidoId },
+        include: {
+          cliente: true,
           detalles: true
         }
       });
     } else {
       // Si no hay detalles, solo actualizar el pedido
       pedido = await prisma.pedido.update({
-        where: { id: parseInt(req.params.id) },
+        where: { id: pedidoId },
         data: pedidoData,
         include: {
           cliente: true,
@@ -794,8 +839,16 @@ app.get('/api/produccion', async (req, res) => {
       orderBy: { createdAt: 'desc' }
     });
 
+    // Agregar campos calculados para facilitar el acceso en el frontend
+    const itemsConCamposExtras = items.map(item => ({
+      ...item,
+      numeroPedido: item.detalle?.pedido?.numero || 'N/A',
+      fechaPedido: item.detalle?.pedido?.fechaCreacion || null,
+      cliente: item.detalle?.pedido?.cliente || null
+    }));
+
     console.log(`Found ${items.length} items de producción habilitados`);
-    res.json(items);
+    res.json(itemsConCamposExtras);
   } catch (error) {
     console.error('Error en GET /api/produccion:', error);
     res.status(500).json({ error: error.message });
@@ -825,7 +878,15 @@ app.get('/api/produccion/:id', async (req, res) => {
       return res.status(404).json({ error: 'Item de producción no encontrado' });
     }
 
-    res.json(item);
+    // Agregar campos calculados
+    const itemConCamposExtras = {
+      ...item,
+      numeroPedido: item.detalle?.pedido?.numero || 'N/A',
+      fechaPedido: item.detalle?.pedido?.fechaCreacion || null,
+      cliente: item.detalle?.pedido?.cliente || null
+    };
+
+    res.json(itemConCamposExtras);
   } catch (error) {
     console.error('Error en GET /api/produccion/:id:', error);
     res.status(500).json({ error: error.message });
