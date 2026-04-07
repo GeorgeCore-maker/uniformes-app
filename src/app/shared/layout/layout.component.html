@@ -41,5 +41,14 @@
 
   <mat-sidenav-content class="content">
     <ng-content></ng-content>
+
+    <!-- Reloj de inactividad -->
+    <div class="inactivity-clock" *ngIf="showInactivityClock" [ngClass]="clockStatusClass">
+      <mat-icon class="clock-icon">schedule</mat-icon>
+      <div class="clock-text">
+        <span class="clock-label">Sesión expira en</span>
+        <span class="clock-time">{{ formattedTimeRemaining }}</span>
+      </div>
+    </div>
   </mat-sidenav-content>
 </mat-sidenav-container>

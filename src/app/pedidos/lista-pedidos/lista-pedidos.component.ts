@@ -76,7 +76,6 @@ export class ListaPedidosComponent implements OnInit, OnDestroy {
   suscribirseAEventos() {
     // Escuchar actualizaciones de producción
     this.eventosSubscription = this.eventosService.produccionActualizada$.subscribe(() => {
-      console.log('Estado de producción actualizado, recargando pedidos...');
       this.cargarPedidos();
     });
   }
@@ -259,7 +258,8 @@ export class ListaPedidosComponent implements OnInit, OnDestroy {
   // Métodos de exportación
   exportarPedidoAPdf(pedido: Pedido) {
     try {
-      this.exportService.exportarPedidoAPdf(pedido);
+      // Pasar el pedido completo con su información de cliente
+      this.exportService.exportarPedidoAPdf(pedido, pedido.cliente);
       this.notificationService.success(`Pedido ${pedido.numero} exportado a PDF`);
     } catch (error) {
       console.error('Error al exportar PDF:', error);
@@ -314,6 +314,9 @@ export class ListaPedidosComponent implements OnInit, OnDestroy {
             next: (pedidoActualizado) => {
               this.notificationService.success('Pedido actualizado correctamente');
               this.cargarPedidos();
+
+              // Emitir evento de actualización para sincronizar con producción
+              this.eventosService.emitirPedidoActualizado(pedido.id);
             },
             error: (error) => {
               console.error('Error al actualizar:', error);
@@ -331,6 +334,9 @@ export class ListaPedidosComponent implements OnInit, OnDestroy {
               }
 
               this.cargarPedidos();
+
+              // Emitir evento de creación para sincronizar con producción
+              this.eventosService.emitirPedidoActualizado(pedidoCreado.id);
             },
             error: (error) => {
               console.error('Error al crear:', error);

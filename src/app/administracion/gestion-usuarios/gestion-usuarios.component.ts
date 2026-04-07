@@ -35,7 +35,6 @@ export class GestionUsuariosComponent implements OnInit {
     this.usuarioService.obtenerTodos().subscribe({
       next: (usuarios: Usuario[]) => {
         this.usuarios = usuarios;
-        console.log('Usuarios cargados:', this.usuarios);
         this.notificationService.success('Usuarios cargados correctamente');
       },
       error: (error: any) => {

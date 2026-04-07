@@ -6,6 +6,7 @@ import { AuthService } from '../../auth/auth.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { NotificationService } from '../../core/services/notification.service';
+import { InactivityService } from '../../core/services/inactivity.service';
 
 interface NavLink {
   label: string;
@@ -32,10 +33,15 @@ export class LayoutComponent implements OnInit, OnDestroy {
   isMobile = false;
   private destroy$ = new Subject<void>();
 
+  // Variables para el reloj de inactividad
+  timeRemaining: number = 0;
+  showInactivityClock = false;
+
   constructor(
     private authService: AuthService,
     private router: Router,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private inactivityService: InactivityService
   ) {}
 
   ngOnInit() {
@@ -43,12 +49,27 @@ export class LayoutComponent implements OnInit, OnDestroy {
     this.userRole = this.authService.getRole();
     this.checkIfMobile();
     window.addEventListener('resize', () => this.checkIfMobile());
+
+    // Iniciar monitoreo de inactividad
+    this.inactivityService.startMonitoring();
+
+    // Suscribirse al tiempo restante
+    this.inactivityService.timeRemaining$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(timeRemaining => {
+        this.timeRemaining = timeRemaining;
+        // Mostrar reloj solo cuando quede menos de 2 minutos
+        this.showInactivityClock = timeRemaining < 2 * 60 * 1000;
+      });
   }
 
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
     window.removeEventListener('resize', () => this.checkIfMobile());
+
+    // Detener monitoreo de inactividad
+    this.inactivityService.stopMonitoring();
   }
 
   checkIfMobile() {
@@ -69,6 +90,10 @@ export class LayoutComponent implements OnInit, OnDestroy {
 
   logout() {
     this.notificationService.info('Cerrando sesión...');
+
+    // Detener monitoreo de inactividad antes de cerrar sesión
+    this.inactivityService.stopMonitoring();
+
     this.authService.logout();
     this.router.navigate(['/auth/login']);
   }
@@ -105,5 +130,27 @@ export class LayoutComponent implements OnInit, OnDestroy {
    */
   get isAdmin(): boolean {
     return this.userRole === 'ADMIN';
+  }
+
+  /**
+   * Formatear tiempo restante en formato MM:SS
+   */
+  get formattedTimeRemaining(): string {
+    const totalSeconds = Math.floor(this.timeRemaining / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  }
+
+  /**
+   * Obtener clase de estado según el tiempo restante
+   */
+  get clockStatusClass(): string {
+    if (this.timeRemaining < 30 * 1000) { // Menos de 30 segundos
+      return 'critical';
+    } else if (this.timeRemaining < 60 * 1000) { // Menos de 1 minuto
+      return 'warning';
+    }
+    return 'normal';
   }
 }

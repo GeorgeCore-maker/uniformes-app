@@ -7,6 +7,7 @@ import { ProductoService } from '../../shared/services/producto.service';
 import { ClienteService } from '../../shared/services/cliente.service';
 import { PedidoService } from '../../shared/services/pedido.service';
 import { ProduccionService } from '../../shared/services/produccion.service';
+import { EventosService } from '../../shared/services/eventos.service';
 import { SharedModule } from '../../shared/shared.module';
 
 @Component({
@@ -34,7 +35,8 @@ export class FormularioPedidoComponent implements OnInit {
     private productoService: ProductoService,
     private clienteService: ClienteService,
     private pedidoService: PedidoService,
-    private produccionService: ProduccionService
+    private produccionService: ProduccionService,
+    private eventosService: EventosService
   ) {
     this.formulario = this.fb.group({
       numero: [data?.numero || '', Validators.required],

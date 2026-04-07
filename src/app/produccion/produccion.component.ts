@@ -50,18 +50,8 @@ export class ProduccionComponent implements OnInit, OnDestroy {
   private suscribirseAEventos() {
     // Escuchar actualizaciones de pedidos
     this.eventosSubscription = this.eventosService.pedidoActualizado$.subscribe(() => {
-      console.log('Pedido actualizado, recargando items de producción...');
       this.cargarItemsProduccion();
     });
-
-    // También recargar cuando cambien los productos (para requiereConfeccion)
-    // Esto se activará cuando se actualice un producto desde inventario
-    this.eventosSubscription.add(
-      this.productoService.obtenerTodos().subscribe(() => {
-        console.log('Productos actualizados, recargando datos de producción...');
-        this.cargarDatos(); // Recargar tanto productos como items
-      })
-    );
   }
 
   private cargarDatos() {
@@ -79,7 +69,6 @@ export class ProduccionComponent implements OnInit, OnDestroy {
   private cargarItemsProduccion() {
     this.produccionService.obtenerTodos().subscribe({
       next: (items) => {
-        console.log('Items recibidos de producción:', items); // Debug
 
         // Filtrar items que deben aparecer en producción
         this.items = items.filter(item => {
@@ -104,7 +93,6 @@ export class ProduccionComponent implements OnInit, OnDestroy {
           return esEstadoValido;
         });
 
-        console.log('Items filtrados:', this.items); // Debug
         this.actualizarFiltro();
       },
       error: (error) => {
@@ -142,8 +130,12 @@ export class ProduccionComponent implements OnInit, OnDestroy {
         // Recargar todos los datos para asegurar consistencia
         this.cargarItemsProduccion();
 
+        // Emitir evento para sincronizar con pedidos
+        if (item.id && item.detalleId) {
+          this.eventosService.emitirProduccionActualizada(item.id, item.detalleId, nuevoEstado);
+        }
+
         // Mostrar mensaje de éxito
-        console.log(`Estado actualizado a ${nuevoEstado} para el item de ${this.getProductoNombre(item.productoId)}`);
       },
       error: (error) => {
         console.error('Error al cambiar estado:', error);

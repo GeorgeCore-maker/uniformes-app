@@ -43,7 +43,6 @@ export class DashboardComponent implements OnInit {
       pedidos: this.pedidoService.obtenerTodos()
     }).subscribe({
       next: (datos) => {
-        console.log('Datos recibidos:', datos); // Debug log
 
         // Contar totales - ser más permisivo con el filtrado
         this.totalClientes = datos.clientes.filter(cliente => {
@@ -82,21 +81,6 @@ export class DashboardComponent implements OnInit {
 
           return false;
         }).length;
-
-        console.log('Estadísticas calculadas:', {
-          clientes: this.totalClientes,
-          productos: this.totalProductos,
-          pedidos: this.totalPedidos,
-          pendientes: this.pedidosPendientes
-        });
-
-        // Log detallado de clientes para debug
-        console.log('Detalle de clientes:', datos.clientes.map(c => ({
-          id: c.id,
-          nombre: c.nombre,
-          habilitado: c.habilitado,
-          incluido: c.habilitado !== false
-        })));
 
         this.cargandoDatos = false;
       },

@@ -35,7 +35,7 @@ export class GestionRolesComponent implements OnInit {
     this.rolService.obtenerTodos().subscribe({
       next: (roles: Rol[]) => {
         this.roles = roles;
-        console.log('Roles cargados:', this.roles);
+        // console.log('Roles cargados:', this.roles);
         this.notificationService.success('Roles cargados correctamente');
       },
       error: (error: any) => {
