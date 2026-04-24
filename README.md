@@ -2,7 +2,15 @@
 
 Aplicación web Angular 18 para gestión integral de uniformes con sistema de roles personalizados, autorización basada en roles (RBAC) y características avanzadas de exportación de datos.
 
-## 🎯 Características Principales
+## � Demo en Vivo
+
+**🚀 Aplicación desplegada:** https://georgecor-maker.github.io/uniformes-app/
+
+**Credenciales de prueba:**
+- Usuario: `admin`
+- Contraseña: `admin123`
+
+## �🎯 Características Principales
 
 ### 1. **Sistema de Autenticación y Autorización**
 - Autenticación por usuario/contraseña

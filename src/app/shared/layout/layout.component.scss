@@ -1,278 +1,120 @@
+// Layout - Optimizado
 .navbar {
-  display: flex;
-  align-items: center;
-  height: 64px;
+  display: flex; align-items: center; height: 64px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-
-  .menu-button {
-    margin-right: 16px;
-  }
-
-  .spacer {
-    flex: 1 1 auto;
-  }
-
-  .username {
-    margin-right: 16px;
-    font-weight: 500;
-  }
+  
+  .menu-button { margin-right: 16px; }
+  .spacer { flex: 1 1 auto; }
+  .username { margin-right: 16px; font-weight: 500; }
 }
 
 .sidenav-container {
-  position: absolute;
-  top: 64px;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  position: absolute; top: 64px; bottom: 0; left: 0; right: 0;
   display: flex;
-
+  
   .sidenav {
-    width: 250px;
-    border-right: 1px solid #ddd;
-
-    .sidenav-header {
-      display: flex;
-      align-items: center;
-      height: 64px;
-      padding: 0 16px;
-      font-size: 18px;
-      font-weight: 600;
+    width: 250px; box-shadow: 3px 0 6px rgba(0,0,0,.24);
+    background: #f8f9fa;
+    
+    .nav-header {
+      padding: 16px; text-align: center; border-bottom: 1px solid #ddd;
+      background: linear-gradient(135deg, #1976d2, #42a5f5);
       color: white;
-    }
-
-    mat-nav-list {
-      padding: 8px 0;
-
-      mat-list-item {
-        cursor: pointer;
-        height: 48px;
-        transition: background-color 0.3s ease;
-
-        &:hover {
-          background-color: rgba(0, 0, 0, 0.04);
-        }
-
-        // Estilo para el item de menú activo
-        &.active-menu-item {
-          background-color: rgba(63, 81, 181, 0.12);
-          border-left: 4px solid #3f51b5;
-
-          mat-icon {
-            color: #3f51b5;
-          }
-
-          span {
-            color: #3f51b5;
-            font-weight: 600;
-          }
-        }
-      }
+      
+      h3 { margin: 0; font-size: 18px; font-weight: 500; }
     }
   }
-
-  .content {
-    flex: 1;
-    overflow-y: auto;
+  
+  .main-content {
+    flex: 1; overflow: auto; background-color: #fafafa;
     padding: 20px;
-    background-color: #f5f5f5;
-    background-image: url('/assets/uniApp_fondo2.png');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-    position: relative;
-
-    // Capa semi-transparente para mejorar legibilidad
-    &::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: rgba(255, 255, 255, 0.5);
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    // Asegurar que el contenido esté por encima de la capa
-    ::ng-deep > * {
-      position: relative;
-      z-index: 1;
-    }
   }
 }
 
-// Reloj de inactividad
-.inactivity-clock {
-  position: fixed;
-  bottom: 16px;
-  right: 16px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 14px;
-  background: white;
-  border-radius: 20px;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
-  z-index: 1000;
-  animation: slideInRight 0.3s ease-out;
-  transition: all 0.3s ease;
-  max-width: 180px;
-
-  .clock-icon {
-    font-size: 20px;
-    width: 20px;
-    height: 20px;
-    animation: pulse 2s infinite;
-    flex-shrink: 0;
-  }
-
-  .clock-text {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-
-    .clock-label {
-      font-size: 9px;
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
-      opacity: 0.8;
-      line-height: 1;
-    }
-
-    .clock-time {
-      font-size: 16px;
-      font-weight: 700;
-      font-family: 'Courier New', monospace;
-      letter-spacing: 0.5px;
-      line-height: 1;
-    }
-  }
-
-  // Estado normal (más de 1 minuto)
-  &.normal {
-    border-left: 4px solid #2196f3;
-
-    .clock-icon {
-      color: #2196f3;
-    }
-
-    .clock-text {
-      .clock-label {
-        color: #2196f3;
+.nav-menu {
+  padding: 8px 0;
+  
+  .nav-item {
+    position: relative;
+    
+    .nav-button {
+      width: 100%; text-align: left; padding: 12px 16px;
+      border: none; background: transparent; cursor: pointer;
+      display: flex; align-items: center; gap: 12px;
+      color: #333; font-size: 14px; font-weight: 500;
+      transition: all 0.2s ease;
+      
+      &:hover, &.active {
+        background-color: rgba(25, 118, 210, 0.1);
+        color: #1976d2;
       }
-
-      .clock-time {
+      
+      mat-icon {
+        font-size: 20px; width: 20px; height: 20px;
+        color: #666;
+      }
+      
+      &.active mat-icon, &:hover mat-icon {
         color: #1976d2;
       }
     }
-  }
-
-  // Estado de advertencia (menos de 1 minuto)
-  &.warning {
-    border-left: 4px solid #ff9800;
-    animation: shake 0.5s infinite;
-
-    .clock-icon {
-      color: #ff9800;
-    }
-
-    .clock-text {
-      .clock-label {
-        color: #ff9800;
-      }
-
-      .clock-time {
-        color: #f57c00;
-      }
-    }
-  }
-
-  // Estado crítico (menos de 30 segundos)
-  &.critical {
-    border-left: 4px solid #f44336;
-    animation: shake 0.3s infinite, pulse 0.5s infinite;
-
-    .clock-icon {
-      color: #f44336;
-    }
-
-    .clock-text {
-      .clock-label {
-        color: #f44336;
-      }
-
-      .clock-time {
-        color: #d32f2f;
-      }
+    
+    &.active::before {
+      content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+      width: 3px; background-color: #1976d2;
     }
   }
 }
 
-// Animaciones
-@keyframes slideInRight {
-  from {
-    opacity: 0;
-    transform: translateX(100px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
+.nav-divider {
+  height: 1px; background-color: #e0e0e0; margin: 8px 16px;
+}
+
+.nav-section-title {
+  padding: 16px 16px 8px; font-size: 12px; font-weight: 600;
+  color: #666; text-transform: uppercase; letter-spacing: 1px;
+}
+
+.user-menu {
+  position: relative;
+  
+  .user-button {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px; background: transparent; border: none;
+    cursor: pointer; border-radius: 4px;
+    
+    &:hover { background-color: rgba(0,0,0,0.04); }
   }
 }
 
-@keyframes pulse {
-  0%, 100% {
-    transform: scale(1);
+.inactivity-warning {
+  position: fixed; top: 20px; right: 20px; z-index: 1000;
+  background: #ff9800; color: white; padding: 16px 20px;
+  border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  display: flex; align-items: center; gap: 12px;
+  
+  .countdown {
+    font-weight: 700; font-size: 18px;
+    background: rgba(255,255,255,0.2); padding: 4px 8px;
+    border-radius: 4px; min-width: 30px; text-align: center;
   }
-  50% {
-    transform: scale(1.1);
-  }
+  
+  mat-icon { font-size: 24px; }
 }
 
-@keyframes shake {
-  0%, 100% {
-    transform: translateX(0);
-  }
-  25% {
-    transform: translateX(-3px);
-  }
-  75% {
-    transform: translateX(3px);
-  }
-}
-
+// Responsive
 @media (max-width: 768px) {
-  .sidenav-container {
-    .sidenav {
-      width: 100%;
-      max-width: 300px;
-    }
+  .sidenav-container .sidenav { width: 200px; }
+  .sidenav-container .main-content { padding: 10px; }
+  
+  .nav-menu .nav-item .nav-button {
+    padding: 10px 12px; font-size: 13px;
+    
+    mat-icon { font-size: 18px; width: 18px; height: 18px; }
   }
+}
 
-  .inactivity-clock {
-    bottom: 10px;
-    right: 10px;
-    padding: 6px 12px;
-    gap: 6px;
-    max-width: 150px;
-
-    .clock-icon {
-      font-size: 18px;
-      width: 18px;
-      height: 18px;
-    }
-
-    .clock-text {
-      .clock-label {
-        font-size: 8px;
-      }
-
-      .clock-time {
-        font-size: 14px;
-      }
-    }
-  }
+@media (max-width: 480px) {
+  .navbar .username { display: none; }
+  .sidenav-container .sidenav { width: 180px; }
 }
