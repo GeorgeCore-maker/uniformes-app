@@ -29,6 +29,7 @@
     "db:studio": "prisma studio",
     "db:reset": "prisma migrate reset",
     "db:seed": "node prisma/seed.js",
+    "db:seed:simple": "node prisma/seed-simple.js",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
     "deploy:netlify": "npm run build:prod && netlify deploy --prod --dir dist/uniformes-app",

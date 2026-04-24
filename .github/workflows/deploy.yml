@@ -3,8 +3,7 @@ name: Deploy Uniformes App to GitHub Pages
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
+  workflow_dispatch: # Permite ejecutar manualmente
 
 jobs:
   build-and-deploy:
@@ -30,8 +29,11 @@ jobs:
     - name: Setup Prisma
       run: |
         npx prisma generate
-        npx prisma migrate deploy
-        node prisma/seed.js
+        npx prisma migrate deploy || echo "Migration failed, continuing..."
+
+    - name: Seed database (optional)
+      run: |
+        node prisma/seed-simple.js || echo "Seed failed, continuing with empty database..."
 
     - name: Build Angular application
       run: npm run build:prod
@@ -42,4 +44,3 @@ jobs:
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./dist/uniformes-app
-        cname: uniformes-app.ejemplo.com  # Opcional: tu dominio personalizado

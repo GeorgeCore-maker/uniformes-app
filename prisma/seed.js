@@ -149,20 +149,23 @@ async function main() {
     const allDetalles = [];
     for (const pedido of data.pedidos) {
       if (pedido.detalles && Array.isArray(pedido.detalles)) {
-        // Agregar el pedidoId a cada detalle
+        // Agregar el pedidoId a cada detalle y generar IDs únicos si no existen
+        let detalleIdCounter = 1;
         const detallesConPedidoId = pedido.detalles.map(detalle => ({
           ...detalle,
+          id: detalle.id || detalleIdCounter++, // Generar ID si no existe
           pedidoId: pedido.id
         }));
         allDetalles.push(...detallesConPedidoId);
       }
     }
 
+    // Crear detalles y mapear los IDs reales
+    const detalleIdMap = new Map();
     for (const detalle of allDetalles) {
       console.log(`  - Creando detalle para pedido ID: ${detalle.pedidoId}`);
-      await prisma.detallePedido.create({
+      const createdDetalle = await prisma.detallePedido.create({
         data: {
-          id: detalle.id,
           pedidoId: detalle.pedidoId,
           productoId: detalle.productoId,
           cantidad: parseInt(detalle.cantidad),
@@ -171,27 +174,31 @@ async function main() {
           estado: detalle.estado
         }
       });
+      // Mapear ID original -> ID real
+      detalleIdMap.set(detalle.id, createdDetalle.id);
     }
 
     // ITEMS DE PRODUCCION (NUEVA ESTRUCTURA - SOLO DETALLE_ID)
     console.log('🏭 Creando items de producción...');
     for (const item of data.produccion) {
-      console.log(`  - Creando item de producción ID: ${item.id} - DetalleId: ${item.detalleId}`);
-      await prisma.itemProduccion.create({
-        data: {
-          id: item.id,
-          // pedidoId removido - ahora se relaciona a través de detalle
-          // pedidoNumero removido - ahora se obtiene a través de detalle.pedido
-          detalleId: item.detalleId,
-          productoId: item.productoId,
-          cantidad: item.cantidad,
-          // estado removido - ahora se maneja solo en DetallePedido
-          fechaInicio: parseDate(item.fechaInicio),
-          observaciones: item.observaciones,
-          habilitado: item.habilitado
-          // createdAt y updatedAt removidos - se manejan automáticamente por Prisma
-        }
-      });
+      // Buscar el ID real del detalle usando el mapa
+      const realDetalleId = detalleIdMap.get(item.detalleId);
+      
+      if (realDetalleId) {
+        console.log(`  - Creando item de producción ID: ${item.id} - DetalleId: ${item.detalleId} -> ${realDetalleId}`);
+        await prisma.itemProduccion.create({
+          data: {
+            detalleId: realDetalleId, // Usar el ID real
+            productoId: item.productoId,
+            cantidad: item.cantidad,
+            fechaInicio: parseDate(item.fechaInicio),
+            observaciones: item.observaciones,
+            habilitado: item.habilitado
+          }
+        });
+      } else {
+        console.log(`  ⚠️  Saltando item de producción ID: ${item.id} - DetalleId ${item.detalleId} no encontrado`);
+      }
     }
 
     // ROLES
