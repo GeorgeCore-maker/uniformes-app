@@ -1,5 +1,6 @@
 // seed-simple.js - Versión simplificada para despliegue web
 const { PrismaClient } = require('@prisma/client');
+const bcrypt = require('bcrypt');
 const prisma = new PrismaClient();
 
 function parseDate(dateString) {
@@ -11,7 +12,7 @@ function parseDate(dateString) {
 async function main() {
   try {
     console.log('🌱 Iniciando seed básico para web...');
-    
+
     // Limpiar datos existentes
     console.log('🧹 Limpiando datos existentes...');
     await prisma.itemProduccion.deleteMany({});
@@ -24,10 +25,11 @@ async function main() {
 
     // USUARIOS
     console.log('👤 Creando usuario admin...');
+    const hashedPassword = await bcrypt.hash("admin123", 10);
     await prisma.user.create({
       data: {
         username: "admin",
-        password: "admin123", // En producción esto debería estar hasheado
+        password: hashedPassword,
         role: "ADMIN",
         activo: true,
         token: "fake-jwt-token-admin",

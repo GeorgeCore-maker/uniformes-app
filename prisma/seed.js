@@ -1,4 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
+const bcrypt = require('bcrypt');
 const fs = require('fs');
 const path = require('path');
 
@@ -40,11 +41,12 @@ async function main() {
     console.log('👤 Creando usuarios...');
     for (const user of data.users) {
       console.log(`  - Creando usuario: ${user.username}`);
+      const hashedPassword = await bcrypt.hash(user.password, 10);
       await prisma.user.create({
         data: {
           id: user.id,
           username: user.username,
-          password: user.password,
+          password: hashedPassword,
           role: user.role,
           activo: user.activo,
           token: user.token,
@@ -183,7 +185,7 @@ async function main() {
     for (const item of data.produccion) {
       // Buscar el ID real del detalle usando el mapa
       const realDetalleId = detalleIdMap.get(item.detalleId);
-      
+
       if (realDetalleId) {
         console.log(`  - Creando item de producción ID: ${item.id} - DetalleId: ${item.detalleId} -> ${realDetalleId}`);
         await prisma.itemProduccion.create({
