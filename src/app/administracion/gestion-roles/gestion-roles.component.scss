@@ -1,9 +1,3 @@
-.gestion-roles-container {
-  padding: 24px;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
 .header {
   display: flex;
   justify-content: space-between;
@@ -138,10 +132,6 @@
 
 // Responsive
 @media (max-width: 768px) {
-  .gestion-roles-container {
-    padding: 16px;
-  }
-  
   .header {
     flex-direction: column;
     gap: 16px;

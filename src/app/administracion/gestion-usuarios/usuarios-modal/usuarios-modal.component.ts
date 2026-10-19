@@ -110,7 +110,6 @@ export class UsuariosModalComponent implements OnInit {
     } else {
       // Crear nuevo usuario
       datosUsuario.id = Date.now();
-      datosUsuario.token = 'fake-jwt-token-' + Date.now();
       datosUsuario.createdAt = new Date();
 
       this.usuarioService.crear(datosUsuario).subscribe({

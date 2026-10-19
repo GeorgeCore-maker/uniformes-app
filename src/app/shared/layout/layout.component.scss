@@ -10,7 +10,6 @@
 
 .sidenav-container {
   position: absolute; top: 64px; bottom: 0; left: 0; right: 0;
-  display: flex;
   
   .sidenav {
     width: 250px; box-shadow: 3px 0 6px rgba(0,0,0,.24);
@@ -27,7 +26,6 @@
   
   .main-content {
     flex: 1; overflow: auto; background-color: #fafafa;
-    padding: 20px;
   }
 }
 
@@ -105,7 +103,6 @@
 // Responsive
 @media (max-width: 768px) {
   .sidenav-container .sidenav { width: 200px; }
-  .sidenav-container .main-content { padding: 10px; }
   
   .nav-menu .nav-item .nav-button {
     padding: 10px 12px; font-size: 13px;

@@ -1,14 +1,4 @@
 .inventario-container {
-  padding: 20px;
-  max-width: 1400px;
-  margin: 0 auto;
-
-  h1 {
-    margin-bottom: 20px;
-    color: #333;
-    font-size: 24px;
-  }
-
   .search-section {
     margin-bottom: 20px;
 
@@ -199,8 +189,6 @@
 
 @media (max-width: 768px) {
   .inventario-container {
-    padding: 15px;
-
     .search-section mat-form-field {
       width: 100%;
     }

@@ -1,0 +1,16 @@
+<div class="page-container">
+  <header class="page-header" *ngIf="titulo || icono">
+    <div class="page-header-texto">
+      <div class="page-header-linea">
+        <mat-icon *ngIf="icono" class="page-icono">{{ icono }}</mat-icon>
+        <h1>{{ titulo }}</h1>
+      </div>
+      <p class="page-subtitulo" *ngIf="subtitulo">{{ subtitulo }}</p>
+    </div>
+    <div class="page-acciones">
+      <ng-content select=".page-accion"></ng-content>
+    </div>
+  </header>
+
+  <ng-content></ng-content>
+</div>

@@ -1,8 +1,8 @@
+<app-page-container titulo="Gestión de Producción">
 <div class="produccion-container">
-  <h1>Gestión de Producción</h1>
 
-  <div class="info-message" style="background-color: #e3f2fd; padding: 12px; margin-bottom: 16px; border-radius: 4px; border-left: 4px solid #2196f3;">
-    <mat-icon style="vertical-align: middle; margin-right: 8px; color: #2196f3;">info</mat-icon>
+  <div class="info-message">
+    <mat-icon class="info-icono">info</mat-icon>
     <span>Los cambios de estado aquí se sincronizan automáticamente con la lista de pedidos. Recarga la página de pedidos para ver los cambios reflejados.</span>
   </div>
 
@@ -73,3 +73,4 @@
     <p *ngIf="items.length === 0" class="subtitle">Todos los items están terminados o no hay pedidos que requieran confección.</p>
   </div>
 </div>
+</app-page-container>

@@ -29,10 +29,12 @@ export class AuthService {
       map((response) => {
         if (response && response.user && response.message === 'Login exitoso') {
           const user = response.user;
-          const role = response.role;
+          const token = user.token;
 
-          // Generar token temporal si no existe
-          const token = user.token || 'fake-jwt-token-' + user.id;
+          if (!token) {
+            console.error('El servidor no devolvió un token de sesión');
+            return false;
+          }
 
           // Guardar datos de autenticación
           this.setAuthData(token, user.role, user.id, user.username);
@@ -57,7 +59,6 @@ export class AuthService {
       username,
       password,
       role,
-      token: 'fake-jwt-token-' + Date.now(),
       habilitado: true
     };
     return this.http.post<Usuario>(this.apiUrl, newUser).pipe(

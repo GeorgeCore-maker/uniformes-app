@@ -40,6 +40,7 @@ import { MatBottomSheetModule } from '@angular/material/bottom-sheet';
 
 // Shared Components
 // import { DialogoConfirmacionComponent } from './components/dialogo-confirmacion/dialogo-confirmacion.component';
+import { PageContainerComponent } from './components/page-container/page-container.component';
 
 const ANGULAR_MATERIAL_MODULES = [
   MatButtonModule,
@@ -94,11 +95,13 @@ const SHARED_COMPONENTS: any[] = [
   ],
   imports: [
     ...COMMON_MODULES,
-    ...ANGULAR_MATERIAL_MODULES
+    ...ANGULAR_MATERIAL_MODULES,
+    PageContainerComponent
   ],
   exports: [
     ...COMMON_MODULES,
     ...ANGULAR_MATERIAL_MODULES,
+    PageContainerComponent,
     ...SHARED_COMPONENTS
   ],
   providers: []

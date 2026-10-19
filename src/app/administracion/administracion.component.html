@@ -1,8 +1,5 @@
- <div class="administracion-container">
-  <div class="header">
-    <mat-icon class="header-icon">admin_panel_settings</mat-icon>
-    <h1>Administración del Sistema</h1>
-  </div>
+<app-page-container titulo="Administración del Sistema" icono="admin_panel_settings">
+<div class="administracion-container">
 
   <mat-tab-group [selectedIndex]="selectedTabIndex"
     (selectedIndexChange)="onTabChange($event)">
@@ -27,3 +24,4 @@
     </mat-tab>
   </mat-tab-group>
 </div>
+</app-page-container>
